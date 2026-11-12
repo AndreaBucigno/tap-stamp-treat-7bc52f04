@@ -85,12 +85,13 @@ function Dashboard() {
 function CreateVenue({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
+  const [stampsRequired, setStampsRequired] = useState<5 | 10>(10);
   const [busy, setBusy] = useState(false);
   async function create(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     const slug = `${slugify(name) || "locale"}-${Math.random().toString(36).slice(2, 6)}`;
-    const { error } = await supabase.from("venues").insert({ name: name.trim(), slug, owner_id: userId });
+    const { error } = await supabase.from("venues").insert({ name: name.trim(), slug, owner_id: userId, stamps_required: stampsRequired });
     setBusy(false);
     if (error) { toast.error("Impossibile creare il locale"); return; }
     qc.invalidateQueries({ queryKey: ["venue"] });
@@ -100,7 +101,25 @@ function CreateVenue({ userId }: { userId: string }) {
       <h1 className="text-3xl font-bold">Come si chiama il tuo locale?</h1>
       <p className="mt-2 text-muted-foreground">Comparirà sulle carte dei tuoi clienti.</p>
       <Input className="mt-6" required maxLength={60} placeholder="Es. Bar Centrale" value={name} onChange={(e) => setName(e.target.value)} />
-      <Button disabled={busy} variant="accent" className="mt-4 w-full" size="lg">Crea locale</Button>
+      <fieldset className="mt-6 space-y-3">
+        <legend className="text-sm font-medium">Da quanti timbri è composta la carta?</legend>
+        <p className="text-sm text-muted-foreground">Scegli quanti timbri servono al cliente per ottenere un premio.</p>
+        <div className="grid grid-cols-2 gap-3">
+          {[5, 10].map((count) => (
+            <button
+              key={count}
+              type="button"
+              aria-pressed={stampsRequired === count}
+              onClick={() => setStampsRequired(count as 5 | 10)}
+              className={`rounded-xl border p-4 text-center transition-colors ${stampsRequired === count ? "border-primary bg-primary/10 text-primary" : "border-input bg-background hover:bg-muted"}`}
+            >
+              <span className="block text-2xl font-bold">{count}</span>
+              <span className="text-sm">timbri</span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+      <Button disabled={busy} variant="accent" className="mt-6 w-full" size="lg">Crea locale</Button>
     </form>
   );
 }
