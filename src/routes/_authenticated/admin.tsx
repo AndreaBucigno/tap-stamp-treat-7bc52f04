@@ -50,7 +50,9 @@ function AdminPage() {
         <span className="font-display text-xl text-accent">Timbrino · Admin</span>
         <Button variant="ghost" size="sm" onClick={signOut}><LogOut /> Esci</Button>
       </header>
-      <h1 className="mt-6 text-4xl font-bold">Dashboard amministratore</h1>\n      <CreateManagerPanel />\n      <h2 className="mt-8 text-2xl font-semibold">Tutti i locali</h2>
+      <h1 className="mt-6 text-4xl font-bold">Dashboard amministratore</h1>
+      <CreateManagerPanel />
+      <h2 className="mt-8 text-2xl font-semibold">Tutti i locali</h2>
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         {([["Locali", v.length], ["Clienti", sum("cards_count")], ["Timbri attivi", sum("stamps_total")], ["Premi dati", sum("rewards_total")]] as const).map(([l, n]) => (
           <div key={l} className="rounded-2xl border bg-card p-4 text-center">

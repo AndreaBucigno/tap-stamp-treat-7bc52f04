@@ -134,13 +134,20 @@ function VenueView({ venue }: { venue: Venue }) {
   const cardsQ = useQuery({
     queryKey: ["cards", venue.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("cards").select("id, customer_name, stamps, rewards_count, last_stamp_at").eq("venue_id", venue.id).order("last_stamp_at", { ascending: false, nullsFirst: false }).limit(200);
-      if (error) throw error;
-      return data;
+      const [customersQ, readyQ, rewardsQ] = await Promise.all([
+        supabase.from("cards").select("id", { count: "exact", head: true }).eq("venue_id", venue.id),
+        supabase.from("cards").select("id", { count: "exact", head: true }).eq("venue_id", venue.id).gte("stamps", venue.stamps_required),
+        supabase.from("rewards").select("id", { count: "exact", head: true }).eq("venue_id", venue.id),
+      ]);
+      if (customersQ.error) throw customersQ.error;
+      if (readyQ.error) throw readyQ.error;
+      if (rewardsQ.error) throw rewardsQ.error;
+      if (customersQ.count === null || readyQ.count === null || rewardsQ.count === null) {
+        throw new Error("Impossibile caricare i conteggi del locale.");
+      }
+      return { customers: customersQ.count, ready: readyQ.count, rewards: rewardsQ.count };
     },
   });
-  const cards = cardsQ.data ?? [];
-  const ready = cards.filter((c) => c.stamps >= venue.stamps_required).length;
 
   return (
     <div className="mt-8 space-y-6">
@@ -153,14 +160,23 @@ function VenueView({ venue }: { venue: Venue }) {
         <Link to="/scan"><ScanLine className="!size-5" /> Scansiona carta cliente</Link>
       </Button>
 
-      <div className="grid grid-cols-3 gap-3">
-        {[["Clienti", cards.length], ["Premi pronti", ready], ["Premi dati", cards.reduce((a, c) => a + c.rewards_count, 0)]].map(([l, v]) => (
-          <div key={l} className="rounded-2xl border bg-card p-4 text-center">
-            <div className="font-display text-3xl font-bold">{v}</div>
-            <div className="text-xs text-muted-foreground">{l}</div>
-          </div>
-        ))}
-      </div>
+      {cardsQ.isPending ? (
+        <p className="text-center text-sm text-muted-foreground">Caricamento statistiche…</p>
+      ) : cardsQ.isError ? (
+        <div className="rounded-2xl border bg-card p-4 text-center">
+          <p>Impossibile caricare le statistiche.</p>
+          <Button variant="outline" className="mt-3" onClick={() => void cardsQ.refetch()}>Riprova</Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-3">
+          {([["Clienti", cardsQ.data.customers], ["Premi pronti", cardsQ.data.ready], ["Premi dati", cardsQ.data.rewards]] as const).map(([l, v]) => (
+            <div key={l} className="rounded-2xl border bg-card p-4 text-center">
+              <div className="font-display text-3xl font-bold">{v}</div>
+              <div className="text-xs text-muted-foreground">{l}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="rounded-3xl border bg-card p-6 shadow-soft">
         <h2 className="text-2xl font-semibold">QR da esporre al bancone</h2>
