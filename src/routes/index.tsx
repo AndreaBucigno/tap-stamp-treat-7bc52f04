@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { SiteFooter } from "@/components/SiteFooter";
 import heroImg from "@/assets/hero-shop.jpg";
 
 export const Route = createFileRoute("/")({
@@ -207,15 +208,7 @@ function Index() {
         </Accordion>
       </section>
 
-      <footer className="bg-primary text-primary-foreground">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row">
-          <div>
-            <p className="font-display text-2xl font-bold">Timbrino</p>
-            <p className="text-sm opacity-75">Fidelizzazione digitale</p>
-          </div>
-          <p className="text-sm opacity-75">© {new Date().getFullYear()} Timbrino</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }
