@@ -8,6 +8,13 @@
       "when": 1794479743404,
       "tag": "0000_loyalty_base",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794479869334,
+      "tag": "0001_admin_staff_and_search",
+      "breakpoints": true
     }
   ]
 }
