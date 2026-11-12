@@ -188,6 +188,22 @@ export type Database = {
           stamps_required: number
         }[]
       }
+      admin_add_staff: {
+        Args: { _email: string; _venue: string }
+        Returns: undefined
+      }
+      admin_remove_staff: { Args: { _id: string }; Returns: undefined }
+      admin_update_venue: {
+        Args: { _name: string; _stamps_required: number; _venue: string }
+        Returns: undefined
+      }
+      admin_venue_staff: {
+        Args: { _venue: string }
+        Returns: {
+          email: string
+          id: string
+        }[]
+      }
       admin_venues: {
         Args: never
         Returns: {
@@ -241,6 +257,17 @@ export type Database = {
         Returns: undefined
       }
       remove_staff: { Args: { _id: string }; Returns: undefined }
+      search_my_cards: {
+        Args: { _q: string }
+        Returns: {
+          customer_name: string
+          id: string
+          rewards_count: number
+          stamps: number
+          stamps_required: number
+          token: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin"
