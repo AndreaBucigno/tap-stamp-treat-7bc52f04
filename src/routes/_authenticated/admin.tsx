@@ -1,7 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { LogOut, Trash2, Users, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -19,6 +23,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 function AdminPage() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState<string | null>(null);
   const q = useQuery({
     queryKey: ["admin-venues"],
     queryFn: async () => {
@@ -27,38 +34,100 @@ function AdminPage() {
       return data ?? [];
     },
   });
+  async function signOut() {
+    await qc.cancelQueries();
+    qc.clear();
+    await supabase.auth.signOut();
+    await navigate({ to: "/auth", replace: true });
+  }
   if (q.isLoading) return <div className="p-10 text-center text-muted-foreground">Caricamento…</div>;
-  if (q.isError) return <div className="p-10 text-center">Accesso riservato all'amministratore.</div>;
+  if (q.isError) return <div className="p-10 text-center">Accesso riservato all'amministratore.<div className="mt-4"><Button variant="outline" onClick={signOut}>Esci</Button></div></div>;
   const v = q.data!;
   const sum = (k: "cards_count" | "stamps_total" | "rewards_total") => v.reduce((a, x) => a + Number(x[k]), 0);
   return (
     <main className="mx-auto max-w-5xl px-5 py-8">
-      <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="size-4" /> Torna al pannello</Link>
-      <h1 className="mt-4 text-4xl font-bold">Tutte le attività</h1>
+      <header className="flex items-center justify-between">
+        <span className="font-display text-xl text-accent">Timbrino · Admin</span>
+        <Button variant="ghost" size="sm" onClick={signOut}><LogOut /> Esci</Button>
+      </header>
+      <h1 className="mt-6 text-4xl font-bold">Tutti i locali</h1>
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        {([["Attività", v.length], ["Clienti", sum("cards_count")], ["Timbri attivi", sum("stamps_total")], ["Premi dati", sum("rewards_total")]] as const).map(([l, n]) => (
+        {([["Locali", v.length], ["Clienti", sum("cards_count")], ["Timbri attivi", sum("stamps_total")], ["Premi dati", sum("rewards_total")]] as const).map(([l, n]) => (
           <div key={l} className="rounded-2xl border bg-card p-4 text-center">
             <div className="font-display text-3xl font-bold">{n}</div>
             <div className="text-xs text-muted-foreground">{l}</div>
           </div>
         ))}
       </div>
-      <div className="mt-6 overflow-x-auto rounded-2xl border bg-card">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted text-muted-foreground">
-            <tr><th className="p-3">Attività</th><th className="p-3">Titolare</th><th className="p-3">Clienti</th><th className="p-3">Premi</th><th className="p-3">Collab.</th><th className="p-3">Iscritta</th></tr>
-          </thead>
-          <tbody className="divide-y">
-            {v.map((x) => (
-              <tr key={x.id}>
-                <td className="p-3 font-medium">{x.name}</td><td className="p-3">{x.owner_email}</td>
-                <td className="p-3">{x.cards_count}</td><td className="p-3">{x.rewards_total}</td><td className="p-3">{x.staff_count}</td>
-                <td className="p-3">{new Date(x.created_at).toLocaleDateString("it-IT")}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ul className="mt-6 space-y-3">
+        {v.length === 0 && <li className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">Nessun locale registrato.</li>}
+        {v.map((x) => (
+          <li key={x.id} className="rounded-2xl border bg-card">
+            <button type="button" className="flex w-full items-center justify-between gap-3 p-4 text-left" aria-expanded={open === x.id} onClick={() => setOpen(open === x.id ? null : x.id)}>
+              <div className="min-w-0">
+                <div className="truncate font-semibold">{x.name}</div>
+                <div className="truncate text-xs text-muted-foreground">{x.owner_email} · iscritto il {new Date(x.created_at).toLocaleDateString("it-IT")}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{x.cards_count} clienti · {x.rewards_total} premi · {x.staff_count} collaboratori</div>
+              </div>
+              <ChevronDown className={`size-5 shrink-0 transition-transform ${open === x.id ? "rotate-180" : ""}`} />
+            </button>
+            {open === x.id && <StaffPanel venueId={x.id} />}
+          </li>
+        ))}
+      </ul>
     </main>
+  );
+}
+
+function StaffPanel({ venueId }: { venueId: string }) {
+  const qc = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const q = useQuery({
+    queryKey: ["admin-staff", venueId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_venue_staff", { _venue: venueId });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  function refresh() {
+    qc.invalidateQueries({ queryKey: ["admin-staff", venueId] });
+    qc.invalidateQueries({ queryKey: ["admin-venues"] });
+  }
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.rpc("admin_add_staff", { _venue: venueId, _email: email });
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    window.__lovableEvents?.track?.("project.staff_invited", {});
+    setEmail("");
+    toast.success("Collaboratore aggiunto");
+    refresh();
+  }
+  async function remove(id: string) {
+    const { error } = await supabase.rpc("admin_remove_staff", { _id: id });
+    if (error) { toast.error(error.message); return; }
+    refresh();
+  }
+  return (
+    <div className="border-t p-4">
+      <h3 className="flex items-center gap-2 font-semibold"><Users className="size-4" /> Collaboratori</h3>
+      <p className="mt-1 text-xs text-muted-foreground">Il collaboratore deve prima registrarsi con la sua email.</p>
+      <form onSubmit={add} className="mt-3 flex gap-2">
+        <Input type="email" required placeholder="email@esempio.it" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email collaboratore" />
+        <Button disabled={busy}>Aggiungi</Button>
+      </form>
+      <ul className="mt-3 divide-y">
+        {(q.data ?? []).length === 0 && !q.isLoading && <li className="py-2 text-sm text-muted-foreground">Nessun collaboratore.</li>}
+        {(q.data ?? []).map((s) => (
+          <li key={s.id} className="flex items-center justify-between py-2 text-sm">
+            {s.email}
+            <Button variant="ghost" size="icon" aria-label={`Rimuovi ${s.email}`} onClick={() => remove(s.id)}><Trash2 /></Button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
