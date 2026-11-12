@@ -27,6 +27,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   useEffect(() => {
     if (user) navigate({ to: "/dashboard" });
@@ -38,6 +39,18 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) toast.error("Email o password non corretti");
+  }
+
+  async function signInWithGoogle() {
+    setGoogleBusy(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin + "/dashboard" },
+    });
+    if (error) {
+      setGoogleBusy(false);
+      toast.error(error.message);
+    }
   }
 
   return (
@@ -52,8 +65,15 @@ function AuthPage() {
         <form onSubmit={submit} className="mt-6 space-y-3">
           <Input type="email" required placeholder="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Input type="password" required placeholder="Password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <Button disabled={busy} className="w-full rounded-full">{busy ? "Accesso…" : "Accedi"}</Button>
+          <Button disabled={busy || googleBusy} className="w-full rounded-full">{busy ? "Accesso…" : "Accedi"}</Button>
         </form>
+        <div className="relative my-5">
+          <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+          <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">oppure</span></div>
+        </div>
+        <Button type="button" variant="outline" disabled={busy || googleBusy} onClick={signInWithGoogle} className="w-full rounded-full">
+          {googleBusy ? "Reindirizzamento…" : "Accedi con Google"}
+        </Button>
       </div>
     </main>
   );
