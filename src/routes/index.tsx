@@ -55,7 +55,7 @@ function Index() {
             <a href="#prezzi">Prezzi</a>
             <a href="#faq">FAQ</a>
           </nav>
-          <Button asChild size="sm"><a href="#richiedi-attivazione">Richiedi attivazione <ArrowRight /></a></Button>
+          <Button asChild size="sm"><Link to="/auth">Accedi <ArrowRight /></Link></Button>
         </div>
       </header>
 
