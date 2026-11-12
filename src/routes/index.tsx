@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BarChart3, Check, Gift, QrCode, ShieldCheck, Store, Smartphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import heroImg from "@/assets/hero-shop.jpg";
 
