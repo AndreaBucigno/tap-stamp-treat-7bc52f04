@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LogOut, Trash2, Users, ChevronDown } from "lucide-react";
+import { LogOut, Trash2, Users, ChevronDown, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,7 @@ function AdminPage() {
         <span className="font-display text-xl text-accent">Timbrino · Admin</span>
         <Button variant="ghost" size="sm" onClick={signOut}><LogOut /> Esci</Button>
       </header>
-      <h1 className="mt-6 text-4xl font-bold">Tutti i locali</h1>
+      <h1 className="mt-6 text-4xl font-bold">Dashboard amministratore</h1>\n      <CreateManagerPanel />\n      <h2 className="mt-8 text-2xl font-semibold">Tutti i locali</h2>
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         {([["Locali", v.length], ["Clienti", sum("cards_count")], ["Timbri attivi", sum("stamps_total")], ["Premi dati", sum("rewards_total")]] as const).map(([l, n]) => (
           <div key={l} className="rounded-2xl border bg-card p-4 text-center">
@@ -76,6 +76,41 @@ function AdminPage() {
         ))}
       </ul>
     </main>
+  );
+}
+
+
+function CreateManagerPanel() {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function create(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.functions.invoke("admin-create-manager", {
+      body: { email: email.trim().toLowerCase(), name: name.trim() },
+    });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message || "Impossibile inviare l'invito");
+      return;
+    }
+    setEmail("");
+    setName("");
+    toast.success("Invito inviato: il gestore riceverà un'email per attivare l'account.");
+  }
+
+  return (
+    <section className="mt-6 rounded-3xl border bg-card p-5 shadow-soft">
+      <h2 className="flex items-center gap-2 text-xl font-semibold"><UserPlus className="size-5" /> Crea un gestore</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Inserisci l'email del titolare. Riceverà un invito per attivare l'account e configurare il proprio locale.</p>
+      <form onSubmit={create} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+        <Input type="text" maxLength={80} placeholder="Nome gestore (facoltativo)" value={name} onChange={(e) => setName(e.target.value)} aria-label="Nome gestore" />
+        <Input type="email" required placeholder="email@esempio.it" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email nuovo gestore" />
+        <Button disabled={busy}><UserPlus /> {busy ? "Invio…" : "Invia invito"}</Button>
+      </form>
+    </section>
   );
 }
 
@@ -114,7 +149,7 @@ function StaffPanel({ venueId }: { venueId: string }) {
   return (
     <div className="border-t p-4">
       <h3 className="flex items-center gap-2 font-semibold"><Users className="size-4" /> Collaboratori</h3>
-      <p className="mt-1 text-xs text-muted-foreground">Il collaboratore deve prima registrarsi con la sua email.</p>
+      <p className="mt-1 text-xs text-muted-foreground">Aggiungi un account già creato dall’amministratore.</p>
       <form onSubmit={add} className="mt-3 flex gap-2">
         <Input type="email" required placeholder="email@esempio.it" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email collaboratore" />
         <Button disabled={busy}>Aggiungi</Button>
