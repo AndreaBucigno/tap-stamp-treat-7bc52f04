@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BarChart3, Check, Gift, QrCode, ShieldCheck, Store, Smartphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Textarea } from "@/components/ui/textarea";
 import heroImg from "@/assets/hero-shop.jpg";
 
 export const Route = createFileRoute("/")({
@@ -19,13 +20,13 @@ export const Route = createFileRoute("/")({
 });
 
 const perks = [
-  { icon: Zap, t: "Attivazione immediata", d: "Inizia in pochi minuti" },
+  { icon: Zap, t: "Attivazione guidata", d: "Ti accompagniamo nella configurazione" },
   { icon: BarChart3, t: "Dashboard completa", d: "Monitora la tua attività" },
   { icon: Gift, t: "Premi personalizzabili", d: "Premia come vuoi tu" },
   { icon: ShieldCheck, t: "Sicurezza garantita", d: "Dati protetti e affidabili" },
 ];
 const steps = [
-  { icon: Store, t: "Crea la tua attività", d: "Registrati e ottieni il QR da esporre alla cassa." },
+  { icon: Store, t: "Richiedi l'attivazione", d: "Raccontaci del tuo locale: ti ricontatteremo per configurarlo." },
   { icon: Smartphone, t: "I tuoi clienti", d: "Inquadrano il QR e ricevono la tessera sul telefono." },
   { icon: QrCode, t: "Registra le visite", d: "Scansioni la tessera e aggiungi un timbro." },
   { icon: Gift, t: "Premia la fedeltà", d: "Al traguardo scegli tu: omaggio o sconto." },
@@ -53,7 +54,7 @@ function Index() {
             <a href="#prezzi">Prezzi</a>
             <a href="#faq">FAQ</a>
           </nav>
-          <Button asChild size="sm"><Link to="/dashboard">Inizia ora <ArrowRight /></Link></Button>
+          <Button asChild size="sm"><a href="#richiedi-attivazione">Richiedi attivazione <ArrowRight /></a></Button>
         </div>
       </header>
 
@@ -67,7 +68,7 @@ function Index() {
           <p className="mt-6 max-w-md text-lg text-foreground/80">
             Timbrino è la tessera fedeltà digitale per barbieri, parrucchieri, bar, ristoranti, negozi e molto altro.
           </p>
-          <Button asChild size="lg" className="mt-8 h-12 px-7 text-base"><Link to="/dashboard">Inizia ora <ArrowRight /></Link></Button>
+          <Button asChild size="lg" className="mt-8 h-12 px-7 text-base"><a href="#richiedi-attivazione">Richiedi attivazione <ArrowRight /></a></Button>
         </div>
       </section>
 
@@ -134,7 +135,59 @@ function Index() {
           <ul className="grid gap-2 text-sm sm:grid-cols-2">
             {plan.map((f) => <li key={f} className="flex items-center gap-2"><Check className="size-4 text-accent" />{f}</li>)}
           </ul>
-          <Button asChild size="lg"><Link to="/dashboard">Inizia ora <ArrowRight /></Link></Button>
+          <Button asChild size="lg"><a href="#richiedi-attivazione">Richiedi attivazione <ArrowRight /></a></Button>
+        </div>
+      </section>
+
+      <section id="richiedi-attivazione" className="mx-auto max-w-6xl px-6 py-20">
+        <div className="grid gap-10 rounded-3xl border bg-card p-8 shadow-soft md:grid-cols-2 md:p-10">
+          <div>
+            <h2 className="text-3xl font-bold">Porta Timbrino nel tuo locale</h2>
+            <p className="mt-3 text-muted-foreground">
+              Raccontaci della tua attività. Ti contatteremo per aiutarti ad attivare il servizio.
+            </p>
+          </div>
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const name = String(formData.get("name") ?? "").trim();
+              const email = String(formData.get("email") ?? "").trim();
+              const business = String(formData.get("business") ?? "").trim();
+              const message = String(formData.get("message") ?? "").trim();
+              const subject = encodeURIComponent(`Richiesta attivazione Timbrino — ${business}`);
+              const body = encodeURIComponent(
+                `Nome: ${name}\nEmail: ${email}\nAttività: ${business}\n\nMessaggio:\n${message || "Richiedo informazioni per attivare Timbrino."}`,
+              );
+              window.location.href = `mailto:andrea.bucigno@stundenti.unipg.it?subject=${subject}&body=${body}`;
+            }}
+          >
+            <div>
+              <label htmlFor="request-name" className="mb-1.5 block text-sm font-medium">Nome e cognome</label>
+              <Input id="request-name" name="name" autoComplete="name" required maxLength={100} />
+            </div>
+            <div>
+              <label htmlFor="request-email" className="mb-1.5 block text-sm font-medium">Email</label>
+              <Input id="request-email" name="email" type="email" autoComplete="email" required maxLength={254} />
+            </div>
+            <div>
+              <label htmlFor="request-business" className="mb-1.5 block text-sm font-medium">Nome del locale o attività</label>
+              <Input id="request-business" name="business" required maxLength={100} />
+            </div>
+            <div>
+              <label htmlFor="request-message" className="mb-1.5 block text-sm font-medium">Messaggio (facoltativo)</label>
+              <Textarea id="request-message" name="message" rows={3} maxLength={1000} />
+            </div>
+            <Button type="submit" size="lg" variant="accent" className="w-full">
+              Prepara la richiesta <ArrowRight />
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Si aprirà il tuo programma email con la richiesta precompilata: potrai controllarla e inviarla.
+              Se non si apre, scrivi a{" "}
+              <a className="underline" href="mailto:andrea.bucigno@stundenti.unipg.it">andrea.bucigno@stundenti.unipg.it</a>.
+            </p>
+          </form>
         </div>
       </section>
 
