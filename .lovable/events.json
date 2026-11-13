@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "events": {
+    "project.card_scanned": {
+      "event_schema_version": 1,
+      "description": "A card is recognized through the camera and resolved successfully.",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
