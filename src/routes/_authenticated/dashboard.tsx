@@ -53,12 +53,14 @@ function Dashboard() {
     queryKey: ["role-extra", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const [staff, admin] = await Promise.all([
+      const [staff, admin, access] = await Promise.all([
         supabase.rpc("my_staff_venue"),
         supabase.from("user_roles").select("role").eq("role", "admin").maybeSingle(),
+        supabase.from("manager_access").select("user_id").maybeSingle(),
       ]);
       if (staff.error) throw staff.error;
-      return { staffVenue: staff.data?.[0] ?? null, isAdmin: !!admin.data };
+      if (admin.error || access.error) throw admin.error ?? access.error;
+      return { staffVenue: staff.data?.[0] ?? null, isAdmin: !!admin.data, authorized: !!access.data };
     },
   });
 
@@ -67,7 +69,7 @@ function Dashboard() {
   }, [extraQ.data?.isAdmin, navigate]);
 
   if (extraQ.data?.isAdmin || loading || !user || venueQ.isLoading || extraQ.isLoading) return <div className="p-10 text-center text-muted-foreground">Caricamento…</div>;
-  if (venueQ.isError) return <div className="p-10 text-center"><p>Impossibile caricare il locale.</p><Button onClick={() => venueQ.refetch()} className="mt-4">Riprova</Button></div>;
+  if (venueQ.isError || extraQ.isError) return <div className="p-10 text-center"><p>Impossibile caricare il locale.</p><Button onClick={() => venueQ.refetch()} className="mt-4">Riprova</Button></div>;
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-8">
@@ -77,7 +79,7 @@ function Dashboard() {
           <Button variant="ghost" size="sm" onClick={signOut}><LogOut /> Esci</Button>
         </div>
       </header>
-      {venueQ.data ? <VenueView venue={venueQ.data} /> : extraQ.data?.staffVenue ? <StaffView name={extraQ.data.staffVenue.name} /> : <CreateVenue userId={user.id} />}
+      {venueQ.data ? <VenueView venue={venueQ.data} /> : extraQ.data?.staffVenue ? <StaffView name={extraQ.data.staffVenue.name} /> : extraQ.data?.authorized ? <CreateVenue userId={user.id} /> : <p className="mt-8">Account non autorizzato. Contatta l’amministratore per ricevere un invito.</p>}
     </main>
   );
 }

@@ -9,7 +9,7 @@ export function cardToken(text: string): string | null {
 }
 
 export function rewardDescription(kind: "gift" | "discount", value: string): string | null {
-  if (kind === "gift") return value.trim() || null;
+  if (kind === "gift") return value.trim() && value.length <= 500 ? value.trim() : null;
   const amount = Number(value);
   return value.trim() && Number.isFinite(amount) && amount >= 1 && amount <= 100
     ? `Sconto del ${amount}%` : null;

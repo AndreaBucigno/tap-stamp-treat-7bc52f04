@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useServerFn } from "@tanstack/react-start";
+import { inviteManager } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -42,7 +44,7 @@ function AdminPage() {
   }
   if (q.isLoading) return <div className="p-10 text-center text-muted-foreground">Caricamento…</div>;
   if (q.isError) return <div className="p-10 text-center">Accesso riservato all'amministratore.<div className="mt-4"><Button variant="outline" onClick={signOut}>Esci</Button></div></div>;
-  const v = q.data!;
+  const v = q.data ?? [];
   const sum = (k: "cards_count" | "stamps_total" | "rewards_total") => v.reduce((a, x) => a + Number(x[k]), 0);
   return (
     <main className="mx-auto max-w-5xl px-5 py-8">
@@ -83,6 +85,7 @@ function AdminPage() {
 
 
 function CreateManagerPanel() {
+  const sendInvite = useServerFn(inviteManager);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -90,17 +93,13 @@ function CreateManagerPanel() {
   async function create(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.functions.invoke("admin-create-manager", {
-      body: { email: email.trim().toLowerCase(), name: name.trim() },
-    });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message || "Impossibile inviare l'invito");
-      return;
-    }
-    setEmail("");
-    setName("");
-    toast.success("Invito inviato: il gestore riceverà un'email per attivare l'account.");
+    try {
+      const { error } = await sendInvite({ data: { email, name } });
+      if (error) { toast.error(error); return; }
+      setEmail(""); setName("");
+      toast.success("Invito inviato: il gestore riceverà un’email per attivare l’account.");
+    } catch { toast.error("Impossibile inviare l’invito. Verifica la connessione e i permessi."); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -146,6 +145,7 @@ function StaffPanel({ venueId }: { venueId: string }) {
   async function remove(id: string) {
     const { error } = await supabase.rpc("admin_remove_staff", { _id: id });
     if (error) { toast.error(error.message); return; }
+    window.__lovableEvents?.track?.("project.staff_removed", {});
     refresh();
   }
   return (

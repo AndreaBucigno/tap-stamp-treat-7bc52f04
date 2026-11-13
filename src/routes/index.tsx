@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/useAuth";
 import { ArrowRight, BarChart3, Check, Gift, QrCode, ShieldCheck, Store, Smartphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -43,6 +46,9 @@ const faqs: [string, string][] = [
 ];
 
 function Index() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => { if (user) void navigate({ to: "/dashboard" }); }, [user, navigate]);
   return (
     <main className="min-h-screen bg-background">
       <header className="absolute inset-x-0 top-0 z-20">

@@ -136,7 +136,8 @@ function RootComponent() {
       setAuth({ user: session?.user ?? null, loading: false });
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       void router.invalidate();
-      if (event !== "SIGNED_OUT") void queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") queryClient.clear();
+      else void queryClient.invalidateQueries();
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);

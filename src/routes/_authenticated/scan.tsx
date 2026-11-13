@@ -42,16 +42,21 @@ function ScanPage() {
     setBusy(true);
     inFlight.current = true;
     try {
+    if (source === "manual") window.__lovableEvents?.track?.("project.card_code_entered", {});
     const { data, error } = await supabase.rpc("add_stamp", { _token: token });
     if (error) {
       if (error.message.includes("Premio già raggiunto")) {
         const { data: card } = await supabase.rpc("get_card", { _token: token });
         const c = card?.[0];
-        if (c) setResult({ token, name: c.customer_name, stamps: c.stamps, required: c.stamps_required, full: true, justStamped: false });
+        if (c) {
+          if (source === "camera") window.__lovableEvents?.track?.("project.card_scanned", {});
+          setResult({ token, name: c.customer_name, stamps: c.stamps, required: c.stamps_required, full: true, justStamped: false });
+        }
       } else toast.error(error.message);
     } else if (data?.[0]) {
       const r = data[0];
-      window.__lovableEvents?.track?.("project.card_scanned", { source });
+      if (source === "camera") window.__lovableEvents?.track?.("project.card_scanned", {});
+      window.__lovableEvents?.track?.("project.stamp_added", { source });
       setResult({ token, name: r.customer_name, stamps: r.stamps, required: r.stamps_required, full: r.stamps >= r.stamps_required, justStamped: true });
     }
     } catch { toast.error("Connessione non disponibile. Riprova."); }
