@@ -1,6 +1,19 @@
 {
   "schema_version": 1,
   "events": {
+    "project.card_code_entered": {
+      "event_schema_version": 1,
+      "description": "A valid card code is submitted manually.",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
     "project.card_scanned": {
       "event_schema_version": 1,
       "description": "A card is recognized through the camera and resolved successfully.",
@@ -14,6 +27,94 @@
         "properties": {
           "source": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "project.customer_searched": {
+      "event_schema_version": 1,
+      "description": "A completed manual customer search is submitted.",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
+    "project.reward_given": {
+      "event_schema_version": 1,
+      "description": "A reward is redeemed successfully.",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "gift",
+              "discount"
+            ]
+          }
+        }
+      }
+    },
+    "project.staff_invited": {
+      "event_schema_version": 1,
+      "description": "An administrator assigns an existing account as staff.",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
+    "project.staff_removed": {
+      "event_schema_version": 1,
+      "description": "An administrator removes a staff assignment successfully.",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      }
+    },
+    "project.stamp_added": {
+      "event_schema_version": 1,
+      "description": "A stamp mutation succeeds.",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "camera",
+              "manual",
+              "search"
+            ]
           }
         }
       }
