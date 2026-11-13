@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { lovable } from "@/integrations/lovable";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -43,14 +44,11 @@ function AuthPage() {
 
   async function signInWithGoogle() {
     setGoogleBusy(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin + "/dashboard" },
-    });
-    if (error) {
-      setGoogleBusy(false);
-      toast.error(error.message);
-    }
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      if (result.error) toast.error(result.error.message);
+    } catch { toast.error("Accesso Google non disponibile. Riprova."); }
+    finally { setGoogleBusy(false); }
   }
 
   return (
