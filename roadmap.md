@@ -1,4 +1,8 @@
 # Completamento Timbrino
+- [ ] Audit sicurezza, autorizzazione gestori e profili; preservare collaboratori Admin.
+- [ ] Correggere reset premio e verificare atomicità e isolamento.
+- [ ] Separare tracking fotocamera, codice, ricerca, timbro, premio e collaboratori.
+- [ ] Proteggere configurazione, eseguire test e produrre report verificato.
 - [x] Verificare e correggere apertura carta e accesso titolare.
 - [x] Verificare timbri, limite di 10 acquisti e consegna premio; bloccare operazioni senza titolare.
 - [x] Eliminare esclusivamente i dati creati per le prove.
