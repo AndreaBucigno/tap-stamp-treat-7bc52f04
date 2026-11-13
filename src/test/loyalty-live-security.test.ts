@@ -54,7 +54,7 @@ describe.skipIf(!url || !key || !secret)("Live isolated security and loyalty", (
       expect((await owner.from("venues").select("id").eq("id", otherVenueId)).data).toEqual([]);
       expect((await owner.from("venues").update({ name: "Unauthorized" }).eq("id", otherVenueId).select("id")).data).toEqual([]);
       expect((await owner.rpc("admin_venues")).error).not.toBeNull();
-      expect((await staff.rpc("admin_add_staff", { _venue: venues[0], _email: "invalid@example.com" })).error).not.toBeNull();
+      expect((await staff.rpc("admin_add_staff", { _venue: ownerVenueId, _email: "invalid@example.com" })).error).not.toBeNull();
       expect((await admin.from("venue_staff").insert({ venue_id: ownerVenueId, user_id: staffId, email: `audit-${tag}-2@example.com` })).error).toBeNull();
       const publicClient = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
       const joined = await publicClient.rpc("join_venue", { _slug: `${tag}-0`, _name: "Cliente audit" });
@@ -69,18 +69,19 @@ describe.skipIf(!url || !key || !secret)("Live isolated security and loyalty", (
       const redeemed = await Promise.all([redeem(), redeem()]);
       expect(redeemed.filter(r => !r.error)).toHaveLength(1);
       const card = await admin.from("cards").select("id,stamps,last_stamp_at,rewards_count").eq("token", token).single();
+      if (!card.data?.id) throw new Error("Redeemed card was not found");
       expect(card.data.stamps).toBe(0);
       expect(card.data.last_stamp_at).toBeNull();
       expect(card.data.rewards_count).toBe(1);
       expect((await admin.from("rewards").select("id").eq("card_id", card.data.id)).data).toHaveLength(1);
       expect((await owner.rpc("add_stamp", { _token: token })).error).toBeNull();
       const secondCard = await publicClient.rpc("join_venue", { _slug: `${tag}-1`, _name: "Altro cliente audit" });
-      expect((await staff.rpc("add_stamp", { _token: secondCard.data })).error).not.toBeNull();
+      const secondToken = secondCard.data;
+      if (!secondToken) throw new Error("Second customer card token was not created");
+      expect((await staff.rpc("add_stamp", { _token: secondToken })).error).not.toBeNull();
       expect((await staff.rpc("remove_staff", { _id: randomUUID() })).error).not.toBeNull();
       // A two-stamp card verifies the cooldown independently of completion.
       expect((await admin.from("venues").update({ stamps_required: 2 }).eq("id", otherVenueId)).error).toBeNull();
-      const secondToken = secondCard.data;
-      if (!secondToken) throw new Error("Second customer card token was not created");
       const stamps = await Promise.all([other.rpc("add_stamp", { _token: secondToken }), other.rpc("add_stamp", { _token: secondToken })]);
       expect(stamps.filter(r => !r.error)).toHaveLength(1);
       const secondCardDetails = await publicClient.rpc("get_card", { _token: secondToken });
