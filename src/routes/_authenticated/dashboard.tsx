@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
 import { ScanLine, LogOut, Copy } from "lucide-react";
 import { CustomerSearch } from "@/components/CustomerSearch";
+import { BrandLogo } from "@/components/BrandLogo";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,7 +75,7 @@ function Dashboard() {
   return (
     <main className="mx-auto max-w-3xl px-5 py-8">
       <header className="flex items-center justify-between">
-        <Link to="/" className="font-display text-xl text-accent">Timbrino</Link>
+        <BrandLogo className="text-accent" />
         <div className="flex gap-1">
           <Button variant="ghost" size="sm" onClick={signOut}><LogOut /> Esci</Button>
         </div>
