@@ -2,6 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { describe, it, expect } from "vitest";
+import type { Database } from "@/integrations/supabase/types";
 
 const url = process.env['SUPABASE_URL'];
 const key = process.env['SUPABASE_PUBLISHABLE_KEY'];
@@ -10,13 +11,13 @@ const secret = process.env['SUPABASE_SERVICE_ROLE_KEY'];
 describe.skipIf(!url || !key || !secret)("Live isolated security and loyalty", () => {
   it("isolates venues, restricts admin actions, and atomically resets rewards", async () => {
     if (!url || !key || !secret) return;
-    const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+    const admin = createClient<Database>(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
     const ids: string[] = [];
     const venues: string[] = [];
     const tag = randomUUID();
     const password = `T!${randomUUID()}a9`;
     try {
-      const clients: ReturnType<typeof createClient>[] = [];
+      const clients: ReturnType<typeof createClient<Database>>[] = [];
       for (let i = 0; i < 3; i++) {
         const email = `audit-${tag}-${i}@example.com`;
         const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
@@ -24,7 +25,7 @@ describe.skipIf(!url || !key || !secret)("Live isolated security and loyalty", (
         const id = created.data.user?.id;
         if (!id) throw new Error("Test account missing");
         ids.push(id);
-        const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+        const client = createClient<Database>(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
         expect((await client.auth.signInWithPassword({ email, password })).error).toBeNull();
         clients.push(client);
       }
@@ -56,7 +57,7 @@ describe.skipIf(!url || !key || !secret)("Live isolated security and loyalty", (
       expect((await owner.rpc("admin_venues")).error).not.toBeNull();
       expect((await staff.rpc("admin_add_staff", { _venue: ownerVenueId, _email: "invalid@example.com" })).error).not.toBeNull();
       expect((await admin.from("venue_staff").insert({ venue_id: ownerVenueId, user_id: staffId, email: `audit-${tag}-2@example.com` })).error).toBeNull();
-      const publicClient = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+      const publicClient = createClient<Database>(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
       const joined = await publicClient.rpc("join_venue", { _slug: `${tag}-0`, _name: "Cliente audit" });
       expect(joined.error).toBeNull();
       const token = joined.data;

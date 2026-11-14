@@ -1,4 +1,5 @@
 # Completamento Timbrino
+- [ ] Verifica richiesta: API dirette, doppio premio, concorrenza, cooldown, errori e test realmente eseguiti; nessuna modifica a grafica o accessi.
 - [ ] Audit sicurezza, autorizzazione gestori e profili; preservare collaboratori Admin.
 - [ ] Correggere reset premio e verificare atomicità e isolamento.
 - [ ] Separare tracking fotocamera, codice, ricerca, timbro, premio e collaboratori.
