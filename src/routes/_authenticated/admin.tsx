@@ -124,7 +124,8 @@ function StaffPanel({ venueId }: { venueId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("admin_venue_staff", { _venue: venueId });
       if (error) throw error;
-      return data ?? [];
+      if (!Array.isArray(data)) throw new Error("Risposta collaboratori non valida");
+      return data;
     },
   });
   function refresh() {
@@ -134,19 +135,26 @@ function StaffPanel({ venueId }: { venueId: string }) {
   async function add(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    try {
     const { error } = await supabase.rpc("admin_add_staff", { _venue: venueId, _email: email });
-    setBusy(false);
     if (error) { toast.error(error.message); return; }
     window.__lovableEvents?.track?.("project.staff_invited", {});
     setEmail("");
     toast.success("Collaboratore aggiunto");
     refresh();
+    } catch { toast.error("Connessione non disponibile. Riprova."); }
+    finally { setBusy(false); }
   }
   async function remove(id: string) {
+    if (busy) return;
+    setBusy(true);
+    try {
     const { error } = await supabase.rpc("admin_remove_staff", { _id: id });
     if (error) { toast.error(error.message); return; }
     window.__lovableEvents?.track?.("project.staff_removed", {});
     refresh();
+    } catch { toast.error("Connessione non disponibile. Riprova."); }
+    finally { setBusy(false); }
   }
   return (
     <div className="border-t p-4">
@@ -157,11 +165,12 @@ function StaffPanel({ venueId }: { venueId: string }) {
         <Button disabled={busy}>Aggiungi</Button>
       </form>
       <ul className="mt-3 divide-y">
-        {(q.data ?? []).length === 0 && !q.isLoading && <li className="py-2 text-sm text-muted-foreground">Nessun collaboratore.</li>}
+        {q.isError && <li className="py-2 text-sm">Impossibile caricare i collaboratori. <Button variant="outline" onClick={() => void q.refetch()}>Riprova</Button></li>}
+        {(q.data ?? []).length === 0 && !q.isLoading && !q.isError && <li className="py-2 text-sm text-muted-foreground">Nessun collaboratore.</li>}
         {(q.data ?? []).map((s) => (
           <li key={s.id} className="flex items-center justify-between py-2 text-sm">
             {s.email}
-            <Button variant="ghost" size="icon" aria-label={`Rimuovi ${s.email}`} onClick={() => remove(s.id)}><Trash2 /></Button>
+            <Button variant="ghost" size="icon" disabled={busy} aria-label={`Rimuovi ${s.email}`} onClick={() => remove(s.id)}><Trash2 /></Button>
           </li>
         ))}
       </ul>

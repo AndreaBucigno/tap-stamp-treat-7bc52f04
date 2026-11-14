@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CardResult, type CardResultData } from "@/components/CardResult";
-import { cardToken } from "@/lib/loyalty";
+import { cardToken, validStampResult } from "@/lib/loyalty";
 
 const QrScanner = lazy(() => import("@/components/QrScanner"));
 
@@ -51,17 +51,17 @@ function ScanPage() {
     const { data, error } = await supabase.rpc("add_stamp", { _token: token });
     if (error) {
       if (error.message.includes("Premio già raggiunto")) {
-        const { data: card } = await supabase.rpc("get_card", { _token: token });
+        const { data: card, error: cardError } = await supabase.rpc("get_card", { _token: token });
         const c = card?.[0];
-        if (c) {
+        if (!cardError && validStampResult(c)) {
           setResult({ token, name: c.customer_name, stamps: c.stamps, required: c.stamps_required, full: true, justStamped: false });
-        }
+        } else toast.error("Impossibile caricare la carta completa. Riprova.");
       } else toast.error(error.message);
-    } else if (data?.[0]) {
+    } else if (validStampResult(data?.[0])) {
       const r = data[0];
       window.__lovableEvents?.track?.("project.stamp_added", { source });
       setResult({ token, name: r.customer_name, stamps: r.stamps, required: r.stamps_required, full: r.stamps >= r.stamps_required, justStamped: true });
-    }
+    } else toast.error("Timbro non confermato. Controlla la carta prima di riprovare.");
     } catch { toast.error("Connessione non disponibile. Riprova."); }
     finally { setBusy(false); inFlight.current = false; }
   }
