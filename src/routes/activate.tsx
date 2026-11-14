@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export const Route = createFileRoute("/activate")({
   head: () => ({ meta: [
@@ -38,7 +39,7 @@ function Activate() {
   }
   return <main className="flex min-h-screen items-center justify-center px-5">
     <div className="w-full max-w-sm rounded-3xl border bg-card p-7 shadow-soft">
-      <p className="font-display text-xl text-accent">Timbrino</p>
+      <BrandLogo className="text-accent" />
       <h1 className="mt-2 text-3xl font-bold">Attiva il tuo account</h1>
       {loading ? <p className="mt-4">Caricamento…</p> : !user ? <p className="mt-4">Apri il link ricevuto nell’invito. Se è scaduto, contatta l’amministratore.</p> : <form onSubmit={submit} className="mt-6 space-y-3">
         <Input type="password" autoComplete="new-password" required minLength={8} aria-label="Nuova password" placeholder="Nuova password" value={password} onChange={e => setPassword(e.target.value)} />
