@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SiteFooter } from "@/components/SiteFooter";
+import { BrandLogo } from "@/components/BrandLogo";
 import heroImg from "@/assets/hero-shop.jpg";
 
 export const Route = createFileRoute("/")({
@@ -53,10 +54,7 @@ function Index() {
     <main className="min-h-screen bg-background">
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Link to="/" className="leading-tight">
-            <span className="block font-display text-2xl font-bold text-foreground">Timbrino</span>
-            <span className="block text-xs text-muted-foreground">Fidelizzazione digitale</span>
-          </Link>
+          <BrandLogo className="text-foreground" />
           <nav className="hidden gap-8 text-sm font-medium text-foreground md:flex">
             <a href="#funzionalita">Funzionalità</a>
             <a href="#prezzi">Prezzi</a>
