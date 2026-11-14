@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { lovable } from "@/integrations/lovable";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -57,7 +58,7 @@ function AuthPage() {
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
           <ArrowLeft className="size-4" /> Torna indietro
         </Link>
-        <p className="mt-6 font-display text-xl text-accent">Timbrino</p>
+        <BrandLogo className="mt-6 text-accent" />
         <h1 className="mt-2 text-3xl font-bold">Bentornato</h1>
         <p className="mt-2 text-sm text-muted-foreground">Accedi con le credenziali ricevute tramite invito dall'amministratore.</p>
         <form onSubmit={submit} className="mt-6 space-y-3">
