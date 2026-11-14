@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CardResult, type CardResultData } from "@/components/CardResult";
+import { validStampResult } from "@/lib/loyalty";
 
 export function CustomerSearch() {
   const qc = useQueryClient();
@@ -18,7 +19,8 @@ export function CustomerSearch() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("search_my_cards", { _q: q.trim() });
       if (error) throw error;
-      return data ?? [];
+      if (!Array.isArray(data)) throw new Error("Risposta clienti non valida");
+      return data;
     },
   });
 
@@ -29,7 +31,7 @@ export function CustomerSearch() {
     try {
     const { data, error } = await supabase.rpc("add_stamp", { _token: c.token });
 
-    if (error || !data?.[0]) { toast.error(error?.message ?? "Timbro non registrato"); return; }
+    if (error || !validStampResult(data?.[0])) { toast.error(error?.message ?? "Timbro non confermato. Aggiorna i clienti prima di riprovare."); return; }
     window.__lovableEvents?.track?.("project.stamp_added", { source: "search" });
     const r = data[0];
     setResult({ token: c.token, name: r.customer_name, stamps: r.stamps, required: r.stamps_required, full: r.stamps >= r.stamps_required, justStamped: true });

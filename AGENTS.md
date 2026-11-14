@@ -30,7 +30,8 @@ use the editor.
 <!-- LOVABLE:END -->
 
 - Keep owner pages under the client-only authenticated layout and observe session changes once in the root; this avoids refresh redirects and competing listeners.
-- Loyalty mutations must check the authenticated venue owner inside database functions and deny anonymous execution; the public card token grants read access only.
+- Loyalty mutations must authorize the authenticated venue owner or assigned staff inside database functions and deny anonymous execution; row locks serialize stamps and rewards, while the public card token grants read access only.
 - Share card-token parsing and reward validation in browser-safe helpers so camera and manual entry follow the same rules.
+- Validate stamp confirmations through the shared browser-safe helper before reporting success; malformed or missing RPC results must remain visible errors.
 - Manager invitations use an authenticated TanStack server function with an RLS-based admin check before loading the privileged client; secrets stay server-only.
 - Manager authorization is stored separately from editable profiles and granted by trusted invitation lifecycle events; venue creation is enforced by database policy.

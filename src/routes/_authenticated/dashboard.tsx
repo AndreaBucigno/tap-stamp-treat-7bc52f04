@@ -69,7 +69,7 @@ function Dashboard() {
   }, [extraQ.data?.isAdmin, navigate]);
 
   if (extraQ.data?.isAdmin || loading || !user || venueQ.isLoading || extraQ.isLoading) return <div className="p-10 text-center text-muted-foreground">Caricamento…</div>;
-  if (venueQ.isError || extraQ.isError) return <div className="p-10 text-center"><p>Impossibile caricare il locale.</p><Button onClick={() => venueQ.refetch()} className="mt-4">Riprova</Button></div>;
+  if (venueQ.isError || extraQ.isError) return <div className="p-10 text-center"><p>Impossibile caricare il locale.</p><Button onClick={() => { void venueQ.refetch(); void extraQ.refetch(); }} className="mt-4">Riprova</Button></div>;
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-8">
@@ -92,11 +92,13 @@ function CreateVenue({ userId }: { userId: string }) {
   async function create(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    try {
     const slug = `${slugify(name) || "locale"}-${Math.random().toString(36).slice(2, 6)}`;
     const { error } = await supabase.from("venues").insert({ name: name.trim(), slug, owner_id: userId, stamps_required: stampsRequired });
-    setBusy(false);
     if (error) { toast.error("Impossibile creare il locale"); return; }
     qc.invalidateQueries({ queryKey: ["venue"] });
+    } catch { toast.error("Connessione non disponibile. Riprova."); }
+    finally { setBusy(false); }
   }
   return (
     <form onSubmit={create} className="mt-12 rounded-3xl border bg-card p-7 shadow-soft">
