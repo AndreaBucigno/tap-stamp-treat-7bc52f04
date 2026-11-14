@@ -1,4 +1,4 @@
-import { Coffee } from "lucide-react";
+import { Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function StampGrid({ stamps, total, light }: { stamps: number; total: number; light?: boolean }) {
@@ -19,7 +19,7 @@ export function StampGrid({ stamps, total, light }: { stamps: number; total: num
             )}
             style={filled ? { animationDelay: `${i * 40}ms` } : undefined}
           >
-            <Coffee className="size-1/2" />
+            <Gift className="size-1/2" strokeWidth={1.8} />
           </div>
         );
       })}
