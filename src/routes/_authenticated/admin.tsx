@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useServerFn } from "@tanstack/react-start";
 import { inviteManager } from "@/lib/admin.functions";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -49,7 +50,7 @@ function AdminPage() {
   return (
     <main className="mx-auto max-w-5xl px-5 py-8">
       <header className="flex items-center justify-between">
-        <span className="font-display text-xl text-accent">Timbrino · Admin</span>
+        <div className="flex items-center gap-3"><BrandLogo className="text-accent" /><span className="text-sm font-medium text-muted-foreground">Admin</span></div>
         <Button variant="ghost" size="sm" onClick={signOut}><LogOut /> Esci</Button>
       </header>
       <h1 className="mt-6 text-4xl font-bold">Dashboard amministratore</h1>
