@@ -33,7 +33,7 @@
     },
     "project.customer_searched": {
       "event_schema_version": 1,
-      "description": "A completed manual customer search is submitted.",
+      "description": "A distinct manual customer search finishes loading and the search field loses focus.",
       "privacy": {
         "contains_pii": false,
         "purpose": "product_analytics"

@@ -11,6 +11,7 @@ import { validStampResult } from "@/lib/loyalty";
 export function CustomerSearch() {
   const qc = useQueryClient();
   const stamping = useRef(false);
+  const lastTrackedSearch = useRef("");
   const [q, setQ] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [result, setResult] = useState<CardResultData | null>(null);
@@ -50,7 +51,13 @@ export function CustomerSearch() {
       <p className="mt-1 text-sm text-muted-foreground">Cerca un cliente per aggiungere un timbro a mano.</p>
       <div className="relative mt-3">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Cerca per nome" value={q} onChange={(e) => { setQ(e.target.value); }} onBlur={() => { if (q.trim() && !listQ.isError) window.__lovableEvents?.track?.("project.customer_searched", {}); }} aria-label="Cerca cliente" />
+        <Input className="pl-9" placeholder="Cerca per nome" value={q} onChange={(e) => { setQ(e.target.value); }} onBlur={() => {
+          const query = q.trim();
+          if (query && listQ.isSuccess && !listQ.isFetching && query !== lastTrackedSearch.current) {
+            lastTrackedSearch.current = query;
+            window.__lovableEvents?.track?.("project.customer_searched", {});
+          }
+        }} aria-label="Cerca cliente" />
       </div>
       <ul className="mt-3 divide-y rounded-2xl border bg-card">
         {listQ.isError && <li className="p-5 text-sm">Impossibile caricare i clienti. <Button variant="outline" onClick={() => listQ.refetch()}>Riprova</Button></li>}
