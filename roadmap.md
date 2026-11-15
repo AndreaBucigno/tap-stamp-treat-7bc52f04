@@ -1,4 +1,5 @@
 # Completamento Timbrino
+- [ ] Controllare le modifiche dell’utente, applicare il logo caricato e verificare i timbri regalo e le attività di sicurezza rimaste.
 - [x] Verifica richiesta: API dirette, doppio premio, concorrenza, cooldown, errori e test realmente eseguiti; nessuna modifica a grafica o accessi.
 - [ ] Verifica completa dall’interfaccia: il browser di prova resta sulla pagina di accesso; operazioni verificate tramite richieste reali al servizio dati.
 - [ ] Audit sicurezza, autorizzazione gestori e profili; preservare collaboratori Admin.
