@@ -35,3 +35,4 @@ use the editor.
 - Validate stamp confirmations through the shared browser-safe helper before reporting success; malformed or missing RPC results must remain visible errors.
 - Manager invitations use an authenticated TanStack server function with an RLS-based admin check before loading the privileged client; secrets stay server-only.
 - Manager authorization is stored separately from editable profiles and granted by trusted invitation lifecycle events; venue creation is enforced by database policy.
+- Render the supplied brand asset through the shared BrandLogo component and derive the local favicon from it so every page uses the same identity.
