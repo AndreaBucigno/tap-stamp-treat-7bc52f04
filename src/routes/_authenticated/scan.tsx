@@ -33,6 +33,7 @@ function ScanPage() {
   const [manual, setManual] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const inFlight = useRef(false);
+  const lastCameraToken = useRef<string | null>(null);
   useEffect(() => setMounted(true), []);
 
   async function handle(text: string, source: "camera" | "manual") {
@@ -44,20 +45,27 @@ function ScanPage() {
     try {
     if (source === "manual") {
       window.__lovableEvents?.track?.("project.card_code_entered", {});
-    } else {
-      // Count a recognized QR scan even when the stamp is blocked by cooldown or card state.
-      window.__lovableEvents?.track?.("project.card_scanned", {});
     }
+    const trackCamera = () => {
+      if (source === "camera" && lastCameraToken.current !== token) {
+        lastCameraToken.current = token;
+        window.__lovableEvents?.track?.("project.card_scanned", {});
+      }
+    };
     const { data, error } = await supabase.rpc("add_stamp", { _token: token });
     if (error) {
-      if (error.message.includes("Premio già raggiunto")) {
+      if (source === "camera" || error.message.includes("Premio già raggiunto")) {
         const { data: card, error: cardError } = await supabase.rpc("get_card", { _token: token });
         const c = card?.[0];
         if (!cardError && validStampResult(c)) {
-          setResult({ token, name: c.customer_name, stamps: c.stamps, required: c.stamps_required, full: true, justStamped: false });
-        } else toast.error("Impossibile caricare la carta completa. Riprova.");
+          trackCamera();
+          if (error.message.includes("Premio già raggiunto")) {
+            setResult({ token, name: c.customer_name, stamps: c.stamps, required: c.stamps_required, full: true, justStamped: false });
+          } else toast.error(error.message);
+        } else toast.error(error.message);
       } else toast.error(error.message);
     } else if (validStampResult(data?.[0])) {
+      trackCamera();
       const r = data[0];
       window.__lovableEvents?.track?.("project.stamp_added", { source });
       setResult({ token, name: r.customer_name, stamps: r.stamps, required: r.stamps_required, full: r.stamps >= r.stamps_required, justStamped: true });
@@ -85,7 +93,7 @@ function ScanPage() {
           </form>
         </div>
       ) : (
-        <div className="mt-5"><CardResult r={result} doneLabel="Scansiona un'altra carta" onDone={() => { setResult(null); setManual(""); }} /></div>
+        <div className="mt-5"><CardResult r={result} doneLabel="Scansiona un'altra carta" onDone={() => { setResult(null); setManual(""); lastCameraToken.current = null; }} /></div>
       )}
     </main>
   );
