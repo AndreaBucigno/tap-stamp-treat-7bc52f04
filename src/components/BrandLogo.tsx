@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import logo from "@/assets/timbrino-logo.webp.asset.json";
+import logo from "@/assets/timbrino-logo-complete.webp.asset.json";
 
 type BrandLogoProps = { className?: string; compact?: boolean; linked?: boolean };
 

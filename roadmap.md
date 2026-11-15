@@ -1,11 +1,14 @@
 # Completamento Timbrino
-- [ ] Controllare le modifiche dell’utente, applicare il logo caricato e verificare i timbri regalo e le attività di sicurezza rimaste.
+- [x] Controllare le modifiche dell’utente, applicare il logo caricato e verificare i timbri regalo e le attività di sicurezza rimaste.
 - [x] Verifica richiesta: API dirette, doppio premio, concorrenza, cooldown, errori e test realmente eseguiti; nessuna modifica a grafica o accessi.
-- [ ] Verifica completa dall’interfaccia: il browser di prova resta sulla pagina di accesso; operazioni verificate tramite richieste reali al servizio dati.
-- [ ] Audit sicurezza, autorizzazione gestori e profili; preservare collaboratori Admin.
+- [x] Verifica dall’interfaccia: accesso email, ricerca, quinto timbro, premio, reset, nuovo timbro immediato e rilettura carta pubblica; dati di prova eliminati.
+- [x] Audit policy, autorizzazione gestori e profili; preservati collaboratori Admin e isolamento verificato con test reali.
 - [x] Correggere reset premio e verificare atomicità e isolamento.
-- [ ] Separare tracking fotocamera, codice, ricerca, timbro, premio e collaboratori.
-- [ ] Proteggere configurazione, eseguire test e produrre report verificato.
+- [x] Separare tracking fotocamera, codice, ricerca, timbro, premio e collaboratori; eliminate ripetizioni della stessa ricerca e scansioni di token non risolti.
+- [ ] Rimozione delle configurazioni già tracciate: richiede il gestore repository; la piattaforma non consente modifiche al file di esclusione. Nessun segreto individuato.
+- [ ] Verifica Google e inviti email: richiede un account Google autorizzato e una casella destinataria reale; nessuna email di prova inviata.
+- [ ] Verifica fotocamera fisica: richiede dispositivo con fotocamera; flusso codice manuale verificato.
+- [x] Eseguire test disponibili e produrre report verificato.
 - [x] Verificare e correggere apertura carta e accesso titolare.
 - [x] Verificare timbri, limite di 10 acquisti e consegna premio; bloccare operazioni senza titolare.
 - [x] Eliminare esclusivamente i dati creati per le prove.
