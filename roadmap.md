@@ -15,5 +15,5 @@
 - [x] Nuova pagina iniziale multisettore.
 - [x] Collaboratori che scansionano.
 - [x] Pannello amministratore.
-- [ ] Prezzo piano con collaboratori: da decidere col titolare.
+- [x] Prezzo piano con collaboratori: supplemento mostrato (importo provvisorio 2,90 €, da confermare).
 - [ ] Wallet Apple/Google: in attesa degli account e certificati del titolare.
