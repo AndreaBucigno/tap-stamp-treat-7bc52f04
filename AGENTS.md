@@ -36,3 +36,4 @@ use the editor.
 - Manager invitations use an authenticated TanStack server function with an RLS-based admin check before loading the privileged client; secrets stay server-only.
 - Manager authorization is stored separately from editable profiles and granted by trusted invitation lifecycle events; venue creation is enforced by database policy.
 - Render the supplied brand asset through the shared BrandLogo component and derive the local favicon from it so every page uses the same identity.
+- Password recovery uses a public reset route and the root's existing auth observer; do not add per-page auth listeners or send current_password in recovery updates.

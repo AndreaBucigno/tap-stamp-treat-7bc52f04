@@ -1,6 +1,6 @@
 import { BrandLogo } from "@/components/BrandLogo";
 
-const contactEmail = "andrea.bucigno@stundenti.unipg.it";
+const contactEmail = "andrea.bucigno@studenti.unipg.it";
 
 export function SiteFooter() {
   return (

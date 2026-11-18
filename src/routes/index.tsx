@@ -42,7 +42,7 @@ const plan = ["Tessere digitali per i clienti", "Timbri tramite QR", "Premi conf
 const faqs: [string, string][] = [
   ["I clienti devono scaricare un'app?", "No. La tessera si apre dal browser del telefono e si può salvare sulla schermata Home in un tocco."],
   ["Funziona per la mia attività?", "Sì: barbieri, parrucchieri, centri estetici, bar, ristoranti e negozi. Ogni visita o acquisto vale un timbro."],
-  ["Ci sono costi per ogni cliente?", "No. Il piano è unico: clienti e scansioni illimitati a 9,90 € al mese. Ogni collaboratore con account personale costa 2,90 € in più al mese."],
+  ["Ci sono costi per ogni cliente?", "No. Il piano include clienti e scansioni illimitati a 9,90 € al mese. Gli account personali per i collaboratori prevedono un supplemento da concordare prima dell’attivazione."],
   ["Posso disdire il servizio?", "Sì, in qualsiasi momento, senza vincoli."],
 ];
 
@@ -137,7 +137,7 @@ function Index() {
             <span className="rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold uppercase text-accent">Piano unico</span>
             <p className="mt-3 font-display text-5xl font-bold">9,90 €<span className="text-lg font-normal text-muted-foreground"> / mese</span></p>
             <p className="mt-1 text-sm text-muted-foreground">oppure <b className="text-foreground">99 € / anno</b> · 2 mesi gratis</p>
-            <p className="mt-3 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-sm"><b>+2,90 € / mese</b> per ogni collaboratore con account personale</p>
+            <p className="mt-3 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-sm">Account personali per i collaboratori: <b>supplemento su preventivo</b></p>
           </div>
           <ul className="grid gap-2 text-sm sm:grid-cols-2">
             {plan.map((f) => <li key={f} className="flex items-center gap-2"><Check className="size-4 text-accent" />{f}</li>)}
@@ -167,7 +167,7 @@ function Index() {
               const body = encodeURIComponent(
                 `Nome: ${name}\nEmail: ${email}\nAttività: ${business}\n\nMessaggio:\n${message || "Richiedo informazioni per attivare Timbrino."}`,
               );
-              window.location.href = `mailto:andrea.bucigno@stundenti.unipg.it?subject=${subject}&body=${body}`;
+              window.location.href = `mailto:andrea.bucigno@studenti.unipg.it?subject=${subject}&body=${body}`;
             }}
           >
             <div>
@@ -192,7 +192,7 @@ function Index() {
             <p className="text-xs text-muted-foreground">
               Si aprirà il tuo programma email con la richiesta precompilata: potrai controllarla e inviarla.
               Se non si apre, scrivi a{" "}
-              <a className="underline" href="mailto:andrea.bucigno@stundenti.unipg.it">andrea.bucigno@stundenti.unipg.it</a>.
+              <a className="underline" href="mailto:andrea.bucigno@studenti.unipg.it">andrea.bucigno@studenti.unipg.it</a>.
             </p>
           </form>
         </div>
