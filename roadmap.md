@@ -1,6 +1,7 @@
 # Completamento Timbrino
 - [x] Preparazione uso aziendale: recupero password, QR stampabile, contatti, prezzo collaboratori su preventivo, test eseguiti.
-- [ ] Lancio commerciale: dati legali del titolare, condizioni e privacy approvate, prezzo collaboratori definitivo e modalità d’incasso da fornire.
+- [ ] Lancio commerciale: dati legali del titolare, condizioni e privacy approvate e prezzo collaboratori definitivo da fornire; incasso in contanti durante le visite ai titolari.
+- [x] Rimuovere dal footer del sito i link alle bozze privacy e termini; bozze conservate senza modificare gli accessi o le protezioni dei dati.
 - [x] Controllare le modifiche dell’utente, applicare il logo caricato e verificare i timbri regalo e le attività di sicurezza rimaste.
 - [x] Verifica richiesta: API dirette, doppio premio, concorrenza, cooldown, errori e test realmente eseguiti; nessuna modifica a grafica o accessi.
 - [x] Verifica dall’interfaccia: accesso email, ricerca, quinto timbro, premio, reset, nuovo timbro immediato e rilettura carta pubblica; dati di prova eliminati.
