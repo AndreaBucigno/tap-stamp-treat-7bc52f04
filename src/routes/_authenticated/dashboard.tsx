@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
-import { ScanLine, LogOut, Copy } from "lucide-react";
+import { ScanLine, LogOut, Copy, Printer } from "lucide-react";
 import { CustomerSearch } from "@/components/CustomerSearch";
 import { BrandLogo } from "@/components/BrandLogo";
 import { toast } from "sonner";
@@ -187,11 +187,20 @@ function VenueView({ venue }: { venue: Venue }) {
         <h2 className="text-2xl font-semibold">QR da esporre al bancone</h2>
         <p className="mt-1 text-sm text-muted-foreground">I clienti lo inquadrano per ricevere la loro carta fedeltà.</p>
         <div className="mt-5 flex flex-col items-center gap-4 sm:flex-row">
-          {origin && <div className="rounded-2xl bg-background p-4"><QRCodeSVG value={joinUrl} size={160} bgColor="transparent" /></div>}
+          {origin && <div className="rounded-2xl bg-background p-4"><QRCodeSVG id="venue-qr" value={joinUrl} size={160} bgColor="transparent" /></div>}
           <div className="w-full min-w-0 flex-1">
             <p className="break-all rounded-xl bg-muted p-3 text-xs">{joinUrl}</p>
             <Button variant="outline" size="sm" className="mt-3" onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Link copiato"); }}>
               <Copy /> Copia link
+            </Button>
+            <Button variant="outline" size="sm" className="ml-2 mt-3" onClick={() => {
+              const svg = document.getElementById("venue-qr")?.outerHTML;
+              const w = window.open("", "_blank");
+              if (!svg || !w) { toast.error("Impossibile aprire la stampa. Consenti le finestre popup."); return; }
+              w.document.write(`<!doctype html><html lang="it"><head><title>QR Timbrino</title><style>body{font-family:sans-serif;text-align:center;padding:48px}svg{width:320px;height:320px}h1{font-size:32px}</style></head><body><h1>Raccogli i timbri!</h1><p>Inquadra il codice per ricevere la tua carta fedeltà.</p>${svg}<p style="font-size:12px">${joinUrl}</p></body></html>`);
+              w.document.close(); w.focus(); w.print();
+            }}>
+              <Printer /> Stampa QR
             </Button>
           </div>
         </div>
