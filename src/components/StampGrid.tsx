@@ -1,7 +1,18 @@
 import { Coffee, Gift, Heart, ShoppingBag, Sparkles, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const stampIcons = {
+  gift: Gift,
+  star: Star,
+  heart: Heart,
+  coffee: Coffee,
+  "shopping-bag": ShoppingBag,
+  sparkles: Sparkles,
+};
+
 export function StampGrid({ stamps, total, light, stampColor, stampIcon = "gift" }: { stamps: number; total: number; light?: boolean; stampColor?: string; stampIcon?: string }) {
+  const Icon = stampIcons[stampIcon as keyof typeof stampIcons] ?? Gift;
+
   return (
     <div className="grid grid-cols-5 gap-2.5">
       {Array.from({ length: total }).map((_, i) => {
