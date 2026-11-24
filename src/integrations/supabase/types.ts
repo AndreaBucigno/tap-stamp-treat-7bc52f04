@@ -192,6 +192,7 @@ export type Database = {
           card_secondary_color: string
           card_logo_url: string | null
           card_tagline: string
+          card_stamp_icon: string
         }
         Insert: {
           created_at?: string
@@ -204,6 +205,7 @@ export type Database = {
           card_secondary_color?: string
           card_logo_url?: string | null
           card_tagline?: string
+          card_stamp_icon?: string
         }
         Update: {
           created_at?: string
@@ -276,6 +278,7 @@ export type Database = {
           card_secondary_color: string
           card_logo_url: string | null
           card_tagline: string
+          card_stamp_icon: string
         }[]
       }
       get_venue_public: {
