@@ -53,7 +53,7 @@ function CardPage() {
           </div>
           <span className="font-display text-3xl font-bold">{c.stamps}<span className="text-base opacity-60">/{c.stamps_required}</span></span>
         </div>
-        <div className="mt-6"><StampGrid stamps={c.stamps} total={c.stamps_required} light stampColor={c.card_secondary_color || "#F5EBD7"} /></div>
+        <div className="mt-6"><StampGrid stamps={c.stamps} total={c.stamps_required} light stampColor={c.card_secondary_color || "#F5EBD7"} stampIcon={c.card_stamp_icon || "gift"} /></div>
         <p className="mt-5 text-sm opacity-80">{c.customer_name}</p>
         <p className="mt-2 text-xs opacity-75">{c.card_tagline || "Raccogli timbri e ricevi premi"}</p>
       </div>
