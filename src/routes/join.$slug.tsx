@@ -57,10 +57,11 @@ function JoinPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-5">
       <form onSubmit={join} className="w-full max-w-sm">
-        <div className="loyalty-card rounded-3xl p-7">
+        <div className="rounded-3xl p-7 shadow-soft" style={{ backgroundColor: venueQ.data.card_primary_color || "#174F3C", color: venueQ.data.card_secondary_color || "#F5EBD7" }}>
+          {venueQ.data.card_logo_url && <img src={venueQ.data.card_logo_url} alt={`Logo di ${venueQ.data.name}`} className="mb-4 size-14 rounded-xl bg-white/90 object-contain p-1" />}
           <p className="text-sm opacity-75">Carta fedeltà</p>
           <h1 className="mt-1 text-3xl font-bold">{venueQ.data.name}</h1>
-          <p className="mt-6 opacity-85">Raccogli {venueQ.data.stamps_required} timbri e ricevi un premio dal locale.</p>
+          <p className="mt-6 opacity-85">{venueQ.data.card_tagline || `Raccogli ${venueQ.data.stamps_required} timbri e ricevi un premio dal locale.`}</p>
         </div>
         <label className="mt-8 block text-sm font-medium">Il tuo nome</label>
         <Input className="mt-2" required maxLength={60} placeholder="Es. Giulia" value={name} onChange={(e) => setName(e.target.value)} />
