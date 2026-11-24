@@ -188,6 +188,10 @@ export type Database = {
           owner_id: string
           slug: string
           stamps_required: number
+          card_primary_color: string
+          card_secondary_color: string
+          card_logo_url: string | null
+          card_tagline: string
         }
         Insert: {
           created_at?: string
@@ -196,6 +200,10 @@ export type Database = {
           owner_id: string
           slug: string
           stamps_required?: number
+          card_primary_color?: string
+          card_secondary_color?: string
+          card_logo_url?: string | null
+          card_tagline?: string
         }
         Update: {
           created_at?: string
@@ -204,6 +212,10 @@ export type Database = {
           owner_id?: string
           slug?: string
           stamps_required?: number
+          card_primary_color?: string
+          card_secondary_color?: string
+          card_logo_url?: string | null
+          card_tagline?: string
         }
         Relationships: []
       }
@@ -260,6 +272,10 @@ export type Database = {
           stamps: number
           stamps_required: number
           venue_name: string
+          card_primary_color: string
+          card_secondary_color: string
+          card_logo_url: string | null
+          card_tagline: string
         }[]
       }
       get_venue_public: {
@@ -267,6 +283,10 @@ export type Database = {
         Returns: {
           name: string
           stamps_required: number
+          card_primary_color: string
+          card_secondary_color: string
+          card_logo_url: string | null
+          card_tagline: string
         }[]
       }
       has_role: {
