@@ -130,7 +130,7 @@ function CreateVenue({ userId }: { userId: string }) {
   );
 }
 
-type Venue = { id: string; name: string; slug: string; stamps_required: number; card_primary_color: string; card_secondary_color: string; card_logo_url: string | null; card_tagline: string };
+type Venue = { id: string; name: string; slug: string; stamps_required: number; card_primary_color: string; card_secondary_color: string; card_logo_url: string | null; card_tagline: string; card_stamp_icon: string };
 
 function VenueView({ venue }: { venue: Venue }) {
   const [origin, setOrigin] = useState("");
