@@ -44,16 +44,18 @@ function CardPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col px-5 py-8">
-      <div className="loyalty-card rounded-3xl p-6">
+      <div className="rounded-3xl p-6 shadow-soft" style={{ backgroundColor: c.card_primary_color || "#174F3C", color: c.card_secondary_color || "#F5EBD7" }}>
         <div className="flex items-start justify-between">
           <div>
+            {c.card_logo_url && <img src={c.card_logo_url} alt={`Logo di ${c.venue_name}`} className="mb-3 size-12 rounded-xl bg-white/90 object-contain p-1" />}
             <p className="text-xs uppercase tracking-widest opacity-70">Carta fedeltà</p>
             <h1 className="mt-1 text-2xl font-bold">{c.venue_name}</h1>
           </div>
           <span className="font-display text-3xl font-bold">{c.stamps}<span className="text-base opacity-60">/{c.stamps_required}</span></span>
         </div>
-        <div className="mt-6"><StampGrid stamps={c.stamps} total={c.stamps_required} light /></div>
+        <div className="mt-6"><StampGrid stamps={c.stamps} total={c.stamps_required} light stampColor={c.card_secondary_color || "#F5EBD7"} /></div>
         <p className="mt-5 text-sm opacity-80">{c.customer_name}</p>
+        <p className="mt-2 text-xs opacity-75">{c.card_tagline || "Raccogli timbri e ricevi premi"}</p>
       </div>
 
       {complete && (
