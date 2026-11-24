@@ -13,7 +13,8 @@ type VenueAppearance = {
   card_primary_color: string;
   card_secondary_color: string;
   card_logo_url: string | null;
-  card_tagline: string;\n  card_stamp_icon: string;
+  card_tagline: string;
+  card_stamp_icon: string;
 };
 
 const palettes = [
@@ -26,7 +27,8 @@ export function CardAppearanceEditor({ venue }: { venue: VenueAppearance }) {
   const [primary, setPrimary] = useState(venue.card_primary_color || palettes[0].primary);
   const [secondary, setSecondary] = useState(venue.card_secondary_color || palettes[0].secondary);
   const [logo, setLogo] = useState<string | null>(venue.card_logo_url);
-  const [tagline, setTagline] = useState(venue.card_tagline || "Raccogli timbri e ricevi premi");\n  const [stampIcon, setStampIcon] = useState(venue.card_stamp_icon || "gift");
+  const [tagline, setTagline] = useState(venue.card_tagline || "Raccogli timbri e ricevi premi");
+  const [stampIcon, setStampIcon] = useState(venue.card_stamp_icon || "gift");
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const changed = primary !== venue.card_primary_color || secondary !== venue.card_secondary_color || logo !== venue.card_logo_url || tagline !== venue.card_tagline || stampIcon !== venue.card_stamp_icon;
@@ -65,7 +67,8 @@ export function CardAppearanceEditor({ venue }: { venue: VenueAppearance }) {
         card_primary_color: primary,
         card_secondary_color: secondary,
         card_logo_url: logo,
-        card_tagline: tagline.trim(),\n        card_stamp_icon: stampIcon,
+        card_tagline: tagline.trim(),
+        card_stamp_icon: stampIcon,
       }).eq("id", venue.id);
       if (error) throw error;
       toast.success("Aspetto della carta salvato!");
@@ -81,7 +84,8 @@ export function CardAppearanceEditor({ venue }: { venue: VenueAppearance }) {
     setPrimary(palettes[0].primary);
     setSecondary(palettes[0].secondary);
     setLogo(null);
-    setTagline("Raccogli timbri e ricevi premi");\n    setStampIcon("gift");
+    setTagline("Raccogli timbri e ricevi premi");
+    setStampIcon("gift");
   }
 
   return (
