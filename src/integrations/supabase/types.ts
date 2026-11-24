@@ -218,6 +218,7 @@ export type Database = {
           card_secondary_color?: string
           card_logo_url?: string | null
           card_tagline?: string
+          card_stamp_icon?: string
         }
         Relationships: []
       }
@@ -290,6 +291,7 @@ export type Database = {
           card_secondary_color: string
           card_logo_url: string | null
           card_tagline: string
+          card_stamp_icon: string
         }[]
       }
       has_role: {
