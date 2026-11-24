@@ -1,7 +1,7 @@
 import { Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function StampGrid({ stamps, total, light }: { stamps: number; total: number; light?: boolean }) {
+export function StampGrid({ stamps, total, light, stampColor }: { stamps: number; total: number; light?: boolean; stampColor?: string }) {
   return (
     <div className="grid grid-cols-5 gap-2.5">
       {Array.from({ length: total }).map((_, i) => {
@@ -17,7 +17,7 @@ export function StampGrid({ stamps, total, light }: { stamps: number; total: num
                   ? "border-primary-foreground/30 text-primary-foreground/30"
                   : "border-border bg-stamp-empty text-muted-foreground/50",
             )}
-            style={filled ? { animationDelay: `${i * 40}ms` } : undefined}
+            style={filled ? { animationDelay: `${i * 40}ms`, ...(stampColor ? { backgroundColor: stampColor } : {}) } : undefined}
           >
             <Gift className="size-1/2" strokeWidth={1.8} />
           </div>
