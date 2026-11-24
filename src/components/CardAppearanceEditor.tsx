@@ -13,7 +13,7 @@ type VenueAppearance = {
   card_primary_color: string;
   card_secondary_color: string;
   card_logo_url: string | null;
-  card_tagline: string;
+  card_tagline: string;\n  card_stamp_icon: string;
 };
 
 const palettes = [
@@ -26,10 +26,10 @@ export function CardAppearanceEditor({ venue }: { venue: VenueAppearance }) {
   const [primary, setPrimary] = useState(venue.card_primary_color || palettes[0].primary);
   const [secondary, setSecondary] = useState(venue.card_secondary_color || palettes[0].secondary);
   const [logo, setLogo] = useState<string | null>(venue.card_logo_url);
-  const [tagline, setTagline] = useState(venue.card_tagline || "Raccogli timbri e ricevi premi");
+  const [tagline, setTagline] = useState(venue.card_tagline || "Raccogli timbri e ricevi premi");\n  const [stampIcon, setStampIcon] = useState(venue.card_stamp_icon || "gift");
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const changed = primary !== venue.card_primary_color || secondary !== venue.card_secondary_color || logo !== venue.card_logo_url || tagline !== venue.card_tagline;
+  const changed = primary !== venue.card_primary_color || secondary !== venue.card_secondary_color || logo !== venue.card_logo_url || tagline !== venue.card_tagline || stampIcon !== venue.card_stamp_icon;
 
   async function chooseLogo(file?: File) {
     if (!file) return;
@@ -65,7 +65,7 @@ export function CardAppearanceEditor({ venue }: { venue: VenueAppearance }) {
         card_primary_color: primary,
         card_secondary_color: secondary,
         card_logo_url: logo,
-        card_tagline: tagline.trim(),
+        card_tagline: tagline.trim(),\n        card_stamp_icon: stampIcon,
       }).eq("id", venue.id);
       if (error) throw error;
       toast.success("Aspetto della carta salvato!");
@@ -81,7 +81,7 @@ export function CardAppearanceEditor({ venue }: { venue: VenueAppearance }) {
     setPrimary(palettes[0].primary);
     setSecondary(palettes[0].secondary);
     setLogo(null);
-    setTagline("Raccogli timbri e ricevi premi");
+    setTagline("Raccogli timbri e ricevi premi");\n    setStampIcon("gift");
   }
 
   return (
@@ -123,6 +123,17 @@ export function CardAppearanceEditor({ venue }: { venue: VenueAppearance }) {
             <Input className="mt-2" maxLength={90} value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Raccogli timbri e ricevi premi" />
           </label>
 
+          <label className="block text-sm font-medium">Icona del timbro
+            <select className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={stampIcon} onChange={(e) => setStampIcon(e.target.value)}>
+              <option value="gift">Regalo</option>
+              <option value="star">Stella</option>
+              <option value="heart">Cuore</option>
+              <option value="coffee">Caffè</option>
+              <option value="shopping-bag">Borsa</option>
+              <option value="sparkles">Scintille</option>
+            </select>
+          </label>
+
           <div>
             <p className="mb-2 text-sm font-medium">Logo del locale</p>
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => void chooseLogo(e.target.files?.[0])} />
@@ -147,7 +158,7 @@ export function CardAppearanceEditor({ venue }: { venue: VenueAppearance }) {
               </div>
               <span className="shrink-0 text-2xl font-bold">3/{venue.stamps_required}</span>
             </div>
-            <div className="mt-5"><StampGrid stamps={3} total={venue.stamps_required} light stampColor={secondary} /></div>
+            <div className="mt-5"><StampGrid stamps={3} total={venue.stamps_required} light stampColor={secondary} stampIcon={stampIcon} /></div>
             <p className="mt-4 text-sm opacity-85">{tagline || "Raccogli timbri e ricevi premi"}</p>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">La grafica viene applicata anche alle carte già distribuite.</p>
