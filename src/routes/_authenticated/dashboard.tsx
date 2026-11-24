@@ -5,6 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { ScanLine, LogOut, Copy, Printer } from "lucide-react";
 import { CustomerSearch } from "@/components/CustomerSearch";
 import { BrandLogo } from "@/components/BrandLogo";
+import { CardAppearanceEditor } from "@/components/CardAppearanceEditor";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -129,7 +130,7 @@ function CreateVenue({ userId }: { userId: string }) {
   );
 }
 
-type Venue = { id: string; name: string; slug: string; stamps_required: number };
+type Venue = { id: string; name: string; slug: string; stamps_required: number; card_primary_color: string; card_secondary_color: string; card_logo_url: string | null; card_tagline: string };
 
 function VenueView({ venue }: { venue: Venue }) {
   const [origin, setOrigin] = useState("");
@@ -205,6 +206,8 @@ function VenueView({ venue }: { venue: Venue }) {
           </div>
         </div>
       </div>
+
+      <CardAppearanceEditor venue={venue} />
 
       <CustomerSearch />
     </div>
