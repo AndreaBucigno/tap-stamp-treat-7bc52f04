@@ -89,7 +89,7 @@ function CardPage() {
                   <p className="font-medium">{reward.description}</p>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <CalendarDays className="size-3.5" />
-                    {new Date(reward.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
+                    {new Date(reward.created_at).toLocaleString("it-IT", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">Ricevuto</span>
