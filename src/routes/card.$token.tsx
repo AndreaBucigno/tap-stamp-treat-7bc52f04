@@ -30,7 +30,7 @@ function CardPage() {
     queryKey: ["card", token],
     refetchInterval: 5000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_card", { _token: token });
+      const { data, error } = await supabase.rpc("get_card_with_rewards", { _token: token });
       if (error) throw error;
       return data?.[0] ?? null;
     },
