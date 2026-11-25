@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -205,6 +206,8 @@ function VenueView({ venue }: { venue: Venue }) {
         )}
       </section>
 
+      <AdvancedAnalytics venue={venue} />
+
       <section className="grid items-start gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="rounded-3xl border bg-card p-5 shadow-sm sm:p-6">
           <div className="flex items-start gap-3">
@@ -257,6 +260,170 @@ function VenueView({ venue }: { venue: Venue }) {
         <CustomerSearch />
       </section>
     </div>
+  );
+}
+
+
+function AdvancedAnalytics({ venue }: { venue: Venue }) {
+  const [period, setPeriod] = useState<7 | 30 | 90>(30);
+  const analyticsQ = useQuery({
+    queryKey: ["venue-advanced-analytics", venue.id],
+    queryFn: async () => {
+      const [cardsResult, rewardsResult] = await Promise.all([
+        supabase.from("cards").select("id, customer_name, stamps, rewards_count, created_at").eq("venue_id", venue.id).order("created_at", { ascending: false }).limit(10000),
+        supabase.from("rewards").select("id, description, kind, card_id, created_at").eq("venue_id", venue.id).order("created_at", { ascending: false }).limit(10000),
+      ]);
+      if (cardsResult.error) throw cardsResult.error;
+      if (rewardsResult.error) throw rewardsResult.error;
+      return { cards: cardsResult.data ?? [], rewards: rewardsResult.data ?? [] };
+    },
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+  const analytics = useMemo(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - (period - 1));
+    start.setHours(0, 0, 0, 0);
+    const keyOf = (date: Date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+    const buckets = new Map<string, number>();
+    for (let i = 0; i < period; i += 1) {
+      const day = new Date(start);
+      day.setDate(start.getDate() + i);
+      buckets.set(keyOf(day), 0);
+    }
+    const cards = analyticsQ.data?.cards ?? [];
+    const rewards = analyticsQ.data?.rewards ?? [];
+    for (const card of cards) {
+      const key = keyOf(new Date(card.created_at));
+      if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    }
+    const newCustomers = Array.from(buckets, ([date, count]) => ({
+      date,
+      label: new Date(date + "T12:00:00").toLocaleDateString("it-IT", { day: "numeric", month: "short" }),
+      count,
+    }));
+    const topCustomers = cards.map((card) => ({
+      id: card.id,
+      name: card.customer_name,
+      stamps: card.stamps,
+      rewards: card.rewards_count,
+      score: card.stamps + card.rewards_count * venue.stamps_required,
+    })).filter((customer) => customer.score > 0)
+      .sort((a, b) => b.score - a.score || b.rewards - a.rewards || b.stamps - a.stamps).slice(0, 5);
+    const rewardCounts = new Map<string, { description: string; kind: string; count: number }>();
+    for (const reward of rewards) {
+      const key = reward.kind + "|" + reward.description.trim().toLocaleLowerCase("it");
+      const current = rewardCounts.get(key);
+      if (current) current.count += 1;
+      else rewardCounts.set(key, { description: reward.description, kind: reward.kind, count: 1 });
+    }
+    return {
+      newCustomers,
+      periodTotal: newCustomers.reduce((sum, item) => sum + item.count, 0),
+      topCustomers,
+      popularRewards: Array.from(rewardCounts.values()).sort((a, b) => b.count - a.count).slice(0, 5),
+    };
+  }, [analyticsQ.data, period, venue.stamps_required]);
+
+  return (
+    <section className="space-y-4 rounded-3xl border bg-card p-5 shadow-sm sm:p-6" aria-label="Statistiche avanzate">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Statistiche avanzate</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Scopri come cresce la tua raccolta fedeltà.</p>
+        </div>
+        <div className="inline-flex w-fit rounded-xl border bg-muted/40 p-1" aria-label="Periodo statistiche">
+          {[7, 30, 90].map((days) => (
+            <button key={days} type="button" onClick={() => setPeriod(days as 7 | 30 | 90)} aria-pressed={period === days}
+              className={"rounded-lg px-3 py-2 text-xs font-medium transition-colors " + (period === days ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+              {days} giorni
+            </button>
+          ))}
+        </div>
+      </div>
+      {analyticsQ.isPending ? (
+        <p className="rounded-2xl bg-muted/40 p-6 text-center text-sm text-muted-foreground">Caricamento statistiche avanzate…</p>
+      ) : analyticsQ.isError ? (
+        <div className="rounded-2xl bg-muted/40 p-6 text-center">
+          <p className="text-sm">Non è stato possibile caricare le statistiche avanzate.</p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={() => void analyticsQ.refetch()}>Riprova</Button>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+            <div className="min-w-0 rounded-2xl border bg-background p-4">
+              <p className="text-sm font-medium">Nuovi clienti</p>
+              <p className="mt-1 font-display text-2xl font-bold tabular-nums">{analytics.periodTotal}</p>
+              <p className="text-xs text-muted-foreground">Iscrizioni negli ultimi {period} giorni</p>
+              {analytics.periodTotal === 0 ? (
+                <p className="mt-8 rounded-xl bg-muted/40 p-5 text-center text-sm text-muted-foreground">Non ci sono nuove iscrizioni in questo periodo.</p>
+              ) : (
+                <div className="mt-4 h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={analytics.newCustomers} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
+                      <XAxis dataKey="label" tickLine={false} axisLine={false} interval={period === 90 ? 13 : period === 30 ? 4 : 0} tick={{ fontSize: 11 }} />
+                      <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Bar dataKey="count" name="Nuovi clienti" fill="hsl(var(--primary))" radius={[5, 5, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+            <div className="rounded-2xl border bg-background p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium">Clienti più attivi</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Timbri attuali + timbri dei premi già ottenuti</p>
+                </div>
+                <Users className="size-5 shrink-0 text-primary" />
+              </div>
+              {analytics.topCustomers.length ? (
+                <ol className="mt-4 space-y-3">
+                  {analytics.topCustomers.map((customer, index) => (
+                    <li key={customer.id} className="flex items-center gap-3">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{index + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{customer.name}</p>
+                        <p className="text-xs text-muted-foreground">{customer.stamps} timbri attuali · {customer.rewards} premi</p>
+                      </div>
+                      <span className="text-sm font-semibold tabular-nums">{customer.score}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="mt-5 rounded-xl bg-muted/40 p-5 text-center text-sm text-muted-foreground">I clienti compariranno qui quando inizieranno a raccogliere timbri.</p>
+              )}
+            </div>
+          </div>
+          <div className="rounded-2xl border bg-background p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-medium">Premi più richiesti</p>
+                <p className="mt-1 text-xs text-muted-foreground">Classifica in base ai premi effettivamente consegnati</p>
+              </div>
+              <Gift className="size-5 text-primary" />
+            </div>
+            {analytics.popularRewards.length ? (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {analytics.popularRewards.map((reward) => (
+                  <div key={reward.kind + reward.description} className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{reward.description}</p>
+                      <p className="text-xs text-muted-foreground">{reward.kind === "discount" ? "Sconto" : "Omaggio"}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{reward.count} {reward.count === 1 ? "volta" : "volte"}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 rounded-xl bg-muted/40 p-5 text-center text-sm text-muted-foreground">Non sono ancora stati consegnati premi.</p>
+            )}
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 
