@@ -288,6 +288,28 @@ export type Database = {
           }[]
         }[]
       }
+      get_card_with_rewards: {
+        Args: { _token: string }
+        Returns: {
+          created_at: string
+          customer_name: string
+          rewards_count: number
+          stamps: number
+          stamps_required: number
+          venue_name: string
+          card_primary_color: string
+          card_secondary_color: string
+          card_logo_url: string | null
+          card_tagline: string
+          card_stamp_icon: string
+          rewards_history: {
+            id: string
+            kind: string
+            description: string
+            created_at: string
+          }[]
+        }[]
+      }
       get_venue_public: {
         Args: { _slug: string }
         Returns: {
