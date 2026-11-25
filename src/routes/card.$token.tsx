@@ -48,6 +48,16 @@ function CardPage() {
     }
   }
 
+  const q = useQuery({
+    queryKey: ["card", token],
+    refetchInterval: 5000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_card_with_rewards", { _token: token });
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+
   useEffect(() => {
     const card = q.data;
     if (!card) return;
@@ -74,16 +84,6 @@ function CardPage() {
     }
     previousSnapshot.current = { stamps: card.stamps, rewardIds };
   }, [q.data, notificationsEnabled, notificationPermission, token]);
-
-  const q = useQuery({
-    queryKey: ["card", token],
-    refetchInterval: 5000,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_card_with_rewards", { _token: token });
-      if (error) throw error;
-      return data?.[0] ?? null;
-    },
-  });
 
   if (q.isLoading) return <div className="p-10 text-center text-muted-foreground">Caricamento…</div>;
   if (q.isError) return <div className="p-10 text-center">Impossibile caricare la carta. Controlla la connessione e riapri il link.</div>;
