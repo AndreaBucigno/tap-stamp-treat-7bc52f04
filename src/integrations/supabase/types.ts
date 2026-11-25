@@ -280,6 +280,12 @@ export type Database = {
           card_logo_url: string | null
           card_tagline: string
           card_stamp_icon: string
+          rewards_history: {
+            id: string
+            kind: string
+            description: string
+            created_at: string
+          }[]
         }[]
       }
       get_venue_public: {
