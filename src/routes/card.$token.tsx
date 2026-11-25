@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
-import { Gift, Smartphone } from "lucide-react";
+import { Gift, Smartphone, History, Percent, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampGrid } from "@/components/StampGrid";
 
@@ -69,6 +69,37 @@ function CardPage() {
         {url && <QRCodeSVG value={url} size={200} bgColor="transparent" fgColor="currentColor" className="text-foreground" />}
         <p className="mt-4 text-center text-sm text-muted-foreground">Mostra questo QR al barista ad ogni acquisto</p>
       </div>
+
+      <section className="mt-6 rounded-3xl border bg-card p-5 shadow-soft">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><History className="size-5" /></span>
+          <div>
+            <h2 className="font-semibold">I tuoi premi</h2>
+            <p className="text-xs text-muted-foreground">Lo storico dei premi che hai ricevuto</p>
+          </div>
+        </div>
+        {c.rewards_history?.length ? (
+          <div className="mt-4 space-y-3">
+            {c.rewards_history.map((reward) => (
+              <div key={reward.id} className="flex items-start gap-3 rounded-2xl bg-muted/50 p-3">
+                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-background text-primary">
+                  {reward.kind === "discount" ? <Percent className="size-4" /> : <Gift className="size-4" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{reward.description}</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CalendarDays className="size-3.5" />
+                    {new Date(reward.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">Ricevuto</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-4 rounded-2xl bg-muted/50 p-4 text-sm text-muted-foreground">Non hai ancora ricevuto premi. Continua a raccogliere timbri: qui compariranno i tuoi premi!</p>
+        )}
+      </section>
 
       <div className="mt-6 flex gap-3 rounded-2xl bg-secondary p-4 text-sm text-secondary-foreground">
         <Smartphone className="size-5 shrink-0" />
