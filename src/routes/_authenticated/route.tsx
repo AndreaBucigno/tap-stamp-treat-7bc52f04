@@ -40,7 +40,7 @@ function AuthenticatedLayout() {
   // Hide owner-only sections until the role is known; fail closed if the role lookup fails.
   const showManagerNavigation =
     !staffRoleQuery.isPending && !staffRoleQuery.isError && !staffRoleQuery.data;
-  const [hash, setHash = useState(typeof window === "undefined" ? "#overview" : window.location.hash || "#overview");
+  const [hash, setHash] = useState(typeof window === "undefined" ? "#overview" : window.location.hash || "#overview");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
