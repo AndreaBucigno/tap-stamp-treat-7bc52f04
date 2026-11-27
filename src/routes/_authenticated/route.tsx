@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, useLocation, Link } from "@tanstack/
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Users, CreditCard, Gift, ScanLine, ChartNoAxesCombined, LogOut, Menu, X } from "lucide-react";
@@ -28,7 +28,19 @@ function AuthenticatedLayout() {
   const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [hash, setHash] = useState(typeof window === "undefined" ? "#overview" : window.location.hash || "#overview");
+  const staffRoleQuery = useQuery({
+    queryKey: ["layout-staff-role", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("my_staff_venue");
+      if (error) throw error;
+      return Boolean(data?.length);
+    },
+  });
+  // Hide owner-only sections until the role is known; fail closed if the role lookup fails.
+  const showManagerNavigation =
+    !staffRoleQuery.isPending && !staffRoleQuery.isError && !staffRoleQuery.data;
+  const [hash, setHash = useState(typeof window === "undefined" ? "#overview" : window.location.hash || "#overview");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -49,7 +61,7 @@ function AuthenticatedLayout() {
   const active = hash.replace("#", "");
   const nav = (
     <>
-      {navigation.map(({ label, href, icon: Icon, section }) => (
+      {showManagerNavigation && navigation.map(({ label, href, icon: Icon, section }) => (
         <a key={section} href={href} onClick={() => setMobileOpen(false)}
           className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${location.pathname === "/dashboard" && active === section ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
           <Icon className="size-[18px]" /> {label}
