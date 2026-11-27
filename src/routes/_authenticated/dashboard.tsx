@@ -2,9 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
-import { ScanLine, LogOut, Copy, Printer, Users, Gift, Award, QrCode, ArrowUpRight, Sparkles } from "lucide-react";
+import { ScanLine, Copy, Printer, Users, Gift, Award, QrCode, ArrowUpRight, Sparkles } from "lucide-react";
 import { CustomerSearch } from "@/components/CustomerSearch";
-import { BrandLogo } from "@/components/BrandLogo";
 import { CardAppearanceEditor } from "@/components/CardAppearanceEditor";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,14 +33,6 @@ function slugify(s: string) {
 function Dashboard() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const qc = useQueryClient();
-  async function signOut() {
-    await qc.cancelQueries();
-    qc.clear();
-    await supabase.auth.signOut();
-    await navigate({ to: "/auth", replace: true });
-  }
-
   const venueQ = useQuery({
     queryKey: ["venue", user?.id],
     enabled: !!user,
@@ -75,13 +66,7 @@ function Dashboard() {
   if (venueQ.isError || extraQ.isError) return <div className="p-10 text-center"><p>Impossibile caricare il locale.</p><Button onClick={() => { void venueQ.refetch(); void extraQ.refetch(); }} className="mt-4">Riprova</Button></div>;
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-8 sm:px-6 lg:px-8">
-      <header className="flex items-center justify-between border-b border-border/60 pb-5">
-        <BrandLogo className="text-accent" />
-        <Button variant="ghost" size="sm" onClick={signOut} className="text-muted-foreground hover:text-foreground"><LogOut className="mr-1 size-4" /> Esci</Button>
-      </header>
-      {venueQ.data ? <VenueView venue={venueQ.data} /> : extraQ.data?.staffVenue ? <StaffView name={extraQ.data.staffVenue.name} /> : extraQ.data?.authorized ? <CreateVenue userId={user.id} /> : <p className="mt-8">Account non autorizzato. Contatta l’amministratore per ricevere un invito.</p>}
-    </main>
+    <div>{venueQ.data ? <VenueView venue={venueQ.data} /> : extraQ.data?.staffVenue ? <StaffView name={extraQ.data.staffVenue.name} /> : extraQ.data?.authorized ? <CreateVenue userId={user.id} /> : <p className="mt-8">Account non autorizzato. Contatta l’amministratore per ricevere un invito.</p>}</div>
   );
 }
 
@@ -133,7 +118,13 @@ type Venue = { id: string; name: string; slug: string; stamps_required: number; 
 
 function VenueView({ venue }: { venue: Venue }) {
   const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
+  const [section, setSection] = useState(typeof window === "undefined" ? "overview" : window.location.hash.replace("#", "") || "overview");
+  useEffect(() => {
+    setOrigin(window.location.origin);
+    const update = () => setSection(window.location.hash.replace("#", "") || "overview");
+    window.addEventListener("hashchange", update);
+    return () => window.removeEventListener("hashchange", update);
+  }, []);
   const joinUrl = `${origin}/join/${venue.slug}`;
 
   const cardsQ = useQuery({
@@ -147,122 +138,55 @@ function VenueView({ venue }: { venue: Venue }) {
       if (customersQ.error) throw customersQ.error;
       if (readyQ.error) throw readyQ.error;
       if (rewardsQ.error) throw rewardsQ.error;
-      if (customersQ.count === null || readyQ.count === null || rewardsQ.count === null) {
-        throw new Error("Impossibile caricare i conteggi del locale.");
-      }
+      if (customersQ.count === null || readyQ.count === null || rewardsQ.count === null) throw new Error("Impossibile caricare i conteggi del locale.");
       return { customers: customersQ.count, ready: readyQ.count, rewards: rewardsQ.count };
     },
   });
 
+  const titles: Record<string, { title: string; description: string }> = {
+    overview: { title: "Panoramica", description: "Tieni sotto controllo le attività principali del tuo locale." },
+    customers: { title: "Clienti", description: "Cerca i clienti e consulta i progressi delle loro carte." },
+    card: { title: "Carta fedeltà", description: "Personalizza l'aspetto della carta e condividila con il QR code." },
+    rewards: { title: "Premi", description: "Monitora i premi consegnati e quelli ancora da ritirare." },
+    analytics: { title: "Statistiche", description: "Scopri come cresce la tua raccolta fedeltà." },
+  };
+  const page = titles[section] ?? titles.overview;
+
   return (
-    <div className="mt-8 space-y-7">
-      <section className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-            <Sparkles className="size-3.5" /> Area gestione
-          </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{venue.name}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">La panoramica della tua attività e del programma fedeltà.</p>
-        </div>
-        <div className="inline-flex w-fit items-center gap-2 rounded-xl border bg-card px-3 py-2 text-sm text-muted-foreground">
-          <Award className="size-4 text-primary" />
-          <span><strong className="text-foreground">{venue.stamps_required}</strong> timbri per un premio</span>
-        </div>
+    <div className="space-y-7">
+      <section className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div><p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">{venue.name}</p><h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{page.title}</h1><p className="mt-2 text-sm text-muted-foreground">{page.description}</p></div>
+        <div className="inline-flex w-fit items-center gap-2 rounded-xl border bg-card px-3 py-2 text-sm text-muted-foreground"><Award className="size-4 text-primary" /><span><strong className="text-foreground">{venue.stamps_required}</strong> timbri per un premio</span></div>
       </section>
 
-      <Button asChild variant="accent" size="lg" className="h-14 w-full justify-between rounded-2xl px-5 text-base shadow-soft sm:w-auto sm:min-w-72">
-        <Link to="/scan"><span className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-xl bg-white/15"><ScanLine className="size-5" /></span> Scansiona carta cliente</span><ArrowUpRight className="size-5 opacity-80" /></Link>
-      </Button>
+      {section === "overview" && <div className="space-y-7">
+        <div className="flex flex-col gap-4 rounded-2xl bg-primary p-5 text-primary-foreground shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6"><div><p className="text-lg font-semibold">Pronto per il prossimo cliente?</p><p className="mt-1 text-sm text-primary-foreground/80">Scansiona la sua carta per aggiungere un timbro.</p></div><Button asChild variant="secondary" size="lg" className="shrink-0"><Link to="/scan"><ScanLine className="mr-2 size-4" /> Scansiona carta</Link></Button></div>
+        <section aria-label="Riepilogo attività"><div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold">Riepilogo attività</h2><span className="text-xs text-muted-foreground">Dati aggiornati in tempo reale</span></div>
+          {cardsQ.isPending ? <p className="rounded-2xl border bg-card p-5 text-center text-sm text-muted-foreground">Caricamento riepilogo…</p> : cardsQ.isError ? <div className="rounded-2xl border bg-card p-5 text-center"><p className="text-sm">Impossibile caricare il riepilogo.</p><Button variant="outline" className="mt-3" onClick={() => void cardsQ.refetch()}>Riprova</Button></div> : <div className="grid gap-3 sm:grid-cols-3">{([{ label: "Clienti iscritti", value: cardsQ.data.customers, icon: Users, note: "Carte create" }, { label: "Premi da ritirare", value: cardsQ.data.ready, icon: Gift, note: "Carte con premio disponibile" }, { label: "Premi consegnati", value: cardsQ.data.rewards, icon: Award, note: "Premi riscattati" }] as const).map(({ label, value, icon: Icon, note }) => <div key={label} className="rounded-2xl border bg-card p-5 transition-shadow hover:shadow-sm"><div className="flex items-center justify-between"><span className="text-sm font-medium text-muted-foreground">{label}</span><span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="size-4" /></span></div><div className="mt-4 font-display text-3xl font-bold tabular-nums">{value}</div><p className="mt-1 text-xs text-muted-foreground">{note}</p></div>)}</div>}
+        </section>
+        <div className="grid gap-3 sm:grid-cols-2"><a href="/dashboard#customers" className="rounded-2xl border bg-card p-5 transition-colors hover:border-primary/40"><Users className="mb-3 size-5 text-primary" /><p className="font-semibold">Gestisci clienti</p><p className="mt-1 text-sm text-muted-foreground">Cerca una carta e controlla i progressi.</p></a><a href="/dashboard#card" className="rounded-2xl border bg-card p-5 transition-colors hover:border-primary/40"><QrCode className="mb-3 size-5 text-primary" /><p className="font-semibold">Personalizza la carta</p><p className="mt-1 text-sm text-muted-foreground">Aggiorna colori, logo e QR di iscrizione.</p></a></div>
+      </div>}
 
-      <section aria-label="Statistiche del locale">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">La tua attività</h2>
-          <span className="text-xs text-muted-foreground">Dati aggiornati in tempo reale</span>
-        </div>
-        {cardsQ.isPending ? (
-          <p className="rounded-2xl border bg-card p-5 text-center text-sm text-muted-foreground">Caricamento statistiche…</p>
-        ) : cardsQ.isError ? (
-          <div className="rounded-2xl border bg-card p-5 text-center">
-            <p>Impossibile caricare le statistiche.</p>
-            <Button variant="outline" className="mt-3" onClick={() => void cardsQ.refetch()}>Riprova</Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {([
-              { label: "Clienti iscritti", value: cardsQ.data.customers, icon: Users, note: "Carte create" },
-              { label: "Premi da ritirare", value: cardsQ.data.ready, icon: Gift, note: "Carte con premio disponibile" },
-              { label: "Premi consegnati", value: cardsQ.data.rewards, icon: Award, note: "Premi riscattati" },
-            ] as const).map(({ label, value, icon: Icon, note }) => (
-              <div key={label} className="group rounded-2xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">{label}</span>
-                  <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="size-4" /></span>
-                </div>
-                <div className="mt-4 font-display text-3xl font-bold tracking-tight tabular-nums">{value}</div>
-                <p className="mt-1 text-xs text-muted-foreground">{note}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      {section === "customers" && <section className="rounded-2xl border bg-card p-5 sm:p-6"><CustomerSearch /></section>}
 
-      <AdvancedAnalytics venue={venue} />
+      {section === "card" && <div className="grid items-start gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+        <section className="rounded-2xl border bg-card p-5 sm:p-6"><div className="flex items-start gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><QrCode className="size-5" /></span><div><h2 className="font-semibold">QR code del locale</h2><p className="mt-1 text-sm text-muted-foreground">I clienti possono inquadrarlo per iscriversi alla raccolta.</p></div></div>
+          <div className="mt-5 flex flex-col items-center rounded-2xl bg-muted/50 p-5">{origin && <div className="rounded-2xl bg-white p-3 shadow-sm"><QRCodeSVG id="venue-qr" value={joinUrl} size={176} bgColor="#ffffff" /></div>}<p className="mt-3 text-center text-xs text-muted-foreground">Inquadra per creare la carta fedeltà</p></div><p className="mt-4 break-all rounded-xl border bg-background px-3 py-2.5 text-xs text-muted-foreground">{joinUrl}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2"><Button variant="outline" size="sm" onClick={() => { void navigator.clipboard.writeText(joinUrl).then(() => toast.success("Link copiato")).catch(() => toast.error("Impossibile copiare il link")); }}><Copy className="mr-1 size-4" /> Copia link</Button><Button variant="outline" size="sm" onClick={() => { const svg = document.getElementById("venue-qr")?.outerHTML; const w = window.open("", "_blank"); if (!svg || !w) { toast.error("Impossibile aprire la stampa. Consenti le finestre popup."); return; } w.document.write(`<!doctype html><html lang="it"><head><title>QR Timbrino</title><style>body{font-family:sans-serif;text-align:center;padding:48px}svg{width:320px;height:320px}h1{font-size:32px}</style></head><body><h1>Raccogli i timbri!</h1><p>Inquadra il codice per ricevere la tua carta fedeltà.</p>${svg}<p style="font-size:12px">${joinUrl}</p></body></html>`); w.document.close(); w.focus(); w.print(); }}><Printer className="mr-1 size-4" /> Stampa QR</Button></div>
+        </section>
+        <section className="rounded-2xl border bg-card p-5 sm:p-6"><div className="mb-5 flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles className="size-5" /></span><div><h2 className="font-semibold">Aspetto della carta</h2><p className="text-sm text-muted-foreground">Colori, logo e dettagli del tuo locale.</p></div></div><CardAppearanceEditor venue={venue} /></section>
+      </div>}
 
-      <section className="grid items-start gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-3xl border bg-card p-5 shadow-sm sm:p-6">
-          <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><QrCode className="size-5" /></span>
-            <div>
-              <h2 className="text-lg font-semibold">QR code del locale</h2>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Mettilo sul bancone: i clienti potranno iscriversi alla tua raccolta punti.</p>
-            </div>
-          </div>
-          <div className="mt-5 flex flex-col items-center rounded-2xl bg-muted/50 p-5">
-            {origin && <div className="rounded-2xl bg-white p-3 shadow-sm"><QRCodeSVG id="venue-qr" value={joinUrl} size={176} bgColor="#ffffff" /></div>}
-            <p className="mt-3 text-center text-xs text-muted-foreground">Inquadra per creare la carta fedeltà</p>
-          </div>
-          <div className="mt-4 min-w-0">
-            <p className="break-all rounded-xl border bg-background px-3 py-2.5 text-xs text-muted-foreground">{joinUrl}</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Link copiato"); }}>
-                <Copy className="mr-1 size-4" /> Copia link
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                const svg = document.getElementById("venue-qr")?.outerHTML;
-                const w = window.open("", "_blank");
-                if (!svg || !w) { toast.error("Impossibile aprire la stampa. Consenti le finestre popup."); return; }
-                w.document.write(`<!doctype html><html lang="it"><head><title>QR Timbrino</title><style>body{font-family:sans-serif;text-align:center;padding:48px}svg{width:320px;height:320px}h1{font-size:32px}</style></head><body><h1>Raccogli i timbri!</h1><p>Inquadra il codice per ricevere la tua carta fedeltà.</p>${svg}<p style="font-size:12px">${joinUrl}</p></body></html>`);
-                w.document.close(); w.focus(); w.print();
-              }}>
-                <Printer className="mr-1 size-4" /> Stampa QR
-              </Button>
-            </div>
-          </div>
-        </div>
+      {section === "rewards" && <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border bg-card p-6"><div className="flex items-center gap-3 text-muted-foreground"><Gift className="size-5 text-primary" /><span className="text-sm font-medium">Premi da ritirare</span></div><p className="mt-4 font-display text-4xl font-bold tabular-nums">{cardsQ.isPending ? "—" : cardsQ.data?.ready ?? "—"}</p><p className="mt-1 text-sm text-muted-foreground">Carte che hanno raggiunto il numero di timbri richiesto.</p></div>
+        <div className="rounded-2xl border bg-card p-6"><div className="flex items-center gap-3 text-muted-foreground"><Award className="size-5 text-primary" /><span className="text-sm font-medium">Premi consegnati</span></div><p className="mt-4 font-display text-4xl font-bold tabular-nums">{cardsQ.isPending ? "—" : cardsQ.data?.rewards ?? "—"}</p><p className="mt-1 text-sm text-muted-foreground">Totale dei premi registrati per il tuo locale.</p></div>
+        <div className="rounded-2xl border bg-muted/40 p-5 sm:col-span-2"><p className="text-sm text-muted-foreground">Per vedere quali premi vengono consegnati più spesso e l'andamento nel tempo, consulta le statistiche avanzate.</p><a href="/dashboard#analytics" className="mt-3 inline-flex items-center text-sm font-semibold text-primary">Vai alle statistiche <ArrowUpRight className="ml-1 size-4" /></a></div>
+      </div>}
 
-        <div className="space-y-5">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles className="size-5" /></span>
-            <div>
-              <h2 className="text-lg font-semibold">Personalizza la tua carta</h2>
-              <p className="text-sm text-muted-foreground">Rendila riconoscibile con i colori e il logo del locale.</p>
-            </div>
-          </div>
-          <CardAppearanceEditor venue={venue} />
-        </div>
-      </section>
-
-      <section className="border-t pt-6">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">I tuoi clienti</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Cerca una carta o consulta i progressi dei clienti.</p>
-        </div>
-        <CustomerSearch />
-      </section>
+      {section === "analytics" && <AdvancedAnalytics venue={venue} />}
     </div>
   );
 }
-
 
 function AdvancedAnalytics({ venue }: { venue: Venue }) {
   const [period, setPeriod] = useState<7 | 30 | 90>(30);
