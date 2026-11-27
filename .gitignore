@@ -2,7 +2,7 @@
 .env
 .env.*
 !.env.example
-!.env.production
+# .env.production is intentionally tracked: it contains only public Supabase URL/publishable-key config required by the hosted build.
 
 # Logs
 logs
