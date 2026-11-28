@@ -68,3 +68,48 @@ Suggested error semantics: clear, stable errors for permission disabled, limit r
 - Do not hand-edit generated Supabase types.
 - Keep changes on this feature branch and do not rewrite published Git history.
 - Run lint, tests, and build after implementation.
+
+
+## Implementation notes from the current schema (read-only audit)
+
+The current schema has these relevant objects:
+
+- `venues`: one row per venue, with `owner_id` unique.
+- `venue_staff`: collaborator rows; authenticated users have SELECT only, while mutations go through SECURITY DEFINER RPCs.
+- `add_staff(_email text)`: owner-facing insertion RPC. It currently finds the owner's venue, checks the account is eligible, then inserts. It does **not** currently check a venue permission or quota, and it does not lock the venue row.
+- `remove_staff(_id uuid)`: owner-facing removal RPC. It deletes only when the collaborator belongs to the caller's venue.
+- `admin_add_staff(_venue uuid, _email text)` and `admin_remove_staff(_id uuid)`: platform-admin staff tools, separately protected by `has_role(auth.uid(), 'admin')`.
+- `admin_venues()`: admin overview currently returns venue details and aggregate counts, but not collaborator entitlement settings.
+
+The migrations are under `drizzle/migrations/`, but `AGENTS.md` explicitly forbids editing them by hand. This audit is read-only; schema work must be requested through Lovable.
+
+## Proposed concrete database API
+
+Names below are proposed and must be checked for collisions before Lovable creates them.
+
+### Venue columns
+
+- `staff_management_enabled boolean NOT NULL DEFAULT false`
+- `staff_limit integer NOT NULL DEFAULT 5 CHECK (staff_limit BETWEEN 1 AND 50)`
+
+Existing venues receive the safe default (disabled). New venues also remain disabled until explicitly enabled by an admin.
+
+### RPCs
+
+- `my_staff_settings()`: authenticated owner only; returns one row containing `enabled`, `staff_limit`, and `staff_count` for the caller's venue. A collaborator or anonymous caller must not receive the owner's settings.
+- `admin_update_staff_settings(_venue uuid, _enabled boolean, _staff_limit integer)`: admin-only; validates the limit and updates only the requested venue. It should lock the venue row while updating.
+- `add_staff(_email text)`: preserve its existing signature and account eligibility checks. Lock the owner's venue row with `FOR UPDATE`, then reject if disabled or if the current collaborator count is already at the configured limit, before inserting. The lock must be acquired before counting so concurrent adds serialize.
+- `remove_staff(_id uuid)`: preserve owner-scoped removal and deliberately do not require the permission to be enabled.
+- `admin_add_staff(_venue uuid, _email text)`: keep admin authorization separate, but apply the same enabled/quota rules to every insertion path so the configured maximum cannot be bypassed through the admin panel. If a platform support override is desired later, it must be a distinct, explicit audited operation rather than a silent bypass.
+
+### Important concurrency detail
+
+The `add_staff` transaction should lock the venue row first, then count rows in `venue_staff`, then insert. Every staff-creation path must follow the same lock order. Merely checking the count in React or issuing an unlocked COUNT query is not sufficient. The venue row is the serialization point for all additions to that venue.
+
+### Test harness constraints
+
+The existing live test file is `src/test/loyalty-live-security.test.ts`. It creates isolated auth users and venues using the service-role client and is skipped unless `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are present. It currently seeds a collaborator directly with the service-role client, which is appropriate for test setup but does not exercise the owner-facing invitation RPC. Extend it only after Lovable has generated the new database types and applied the schema.
+
+Add a dedicated live test (or a clearly isolated section) for the new settings API. Use at least two venues and owner/staff/admin sessions. For the race test, configure a limit of 1, start with zero collaborators, call `add_staff` twice concurrently using two distinct eligible accounts, and assert exactly one succeeds and the final count is 1. Always clean up venues, staff, manager access, and auth users in `finally`.
+
+Do not run live tests against production data. Use a disposable Supabase test project with the three required environment variables.
