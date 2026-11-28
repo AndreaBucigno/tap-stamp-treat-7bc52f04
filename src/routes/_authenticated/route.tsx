@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, CreditCard, Gift, ScanLine, ChartNoAxesCombined, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, UserCog, CreditCard, Gift, ScanLine, ChartNoAxesCombined, LogOut, Menu, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated")({
 const navigation = [
   { label: "Panoramica", href: "/dashboard#overview", icon: LayoutDashboard, section: "overview" },
   { label: "Clienti", href: "/dashboard#customers", icon: Users, section: "customers" },
+  { label: "Collaboratori", href: "/dashboard#staff", icon: UserCog, section: "staff" },
   { label: "Carta fedeltà", href: "/dashboard#card", icon: CreditCard, section: "card" },
   { label: "Premi", href: "/dashboard#rewards", icon: Gift, section: "rewards" },
   { label: "Statistiche", href: "/dashboard#analytics", icon: ChartNoAxesCombined, section: "analytics" },
