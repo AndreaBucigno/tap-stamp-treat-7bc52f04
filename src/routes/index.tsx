@@ -128,21 +128,23 @@ function Index() {
       </section>
 
       <section id="prezzi" className="mx-auto max-w-6xl px-6 py-20">
-        <div className="grid items-center gap-8 rounded-3xl border bg-card p-8 shadow-soft md:grid-cols-[1fr_auto_1.4fr_auto]">
-          <div>
+        <div className="grid min-w-0 gap-8 rounded-3xl border bg-card p-6 shadow-soft sm:p-8 lg:grid-cols-2 lg:gap-x-12 lg:gap-y-8 lg:p-10">
+          <div className="min-w-0">
             <h2 className="text-3xl font-bold leading-tight">Semplice. Trasparente. Senza sorprese.</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Tutto quello che serve per far crescere la fedeltà dei tuoi clienti.</p>
+            <p className="mt-2 max-w-lg text-sm text-muted-foreground">Tutto quello che serve per far crescere la fedeltà dei tuoi clienti.</p>
           </div>
-          <div className="text-center">
-            <span className="rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold uppercase text-accent">Piano unico</span>
-            <p className="mt-3 font-display text-5xl font-bold">9,90 €<span className="text-lg font-normal text-muted-foreground"> / mese</span></p>
-            <p className="mt-1 text-sm text-muted-foreground">oppure <b className="text-foreground">99 € / anno</b> · 2 mesi gratis</p>
-            <p className="mt-3 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-sm">Account personali per i collaboratori: <b>supplemento su preventivo</b></p>
+          <div className="min-w-0 rounded-2xl bg-secondary/50 p-5 text-center sm:p-6">
+            <span className="inline-flex rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold uppercase text-accent">Piano unico</span>
+            <p className="mt-3 whitespace-nowrap font-display text-4xl font-bold sm:text-5xl">9,90 € <span className="text-base font-normal text-muted-foreground sm:text-lg">/ mese</span></p>
+            <p className="mt-2 text-sm text-muted-foreground">oppure <b className="text-foreground">99 € / anno</b> · 2 mesi gratis</p>
+            <p className="mx-auto mt-4 max-w-md break-words rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 text-sm leading-relaxed">Account personali per i collaboratori: <b>supplemento su preventivo</b></p>
           </div>
-          <ul className="grid gap-2 text-sm sm:grid-cols-2">
-            {plan.map((f) => <li key={f} className="flex items-center gap-2"><Check className="size-4 text-accent" />{f}</li>)}
+          <ul className="grid min-w-0 gap-3 text-sm sm:grid-cols-2 lg:col-span-2 lg:grid-cols-3">
+            {plan.map((f) => <li key={f} className="flex min-w-0 items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-accent" /><span>{f}</span></li>)}
           </ul>
-          <Button asChild size="lg"><a href="#richiedi-attivazione">Richiedi attivazione <ArrowRight /></a></Button>
+          <div className="flex justify-start lg:col-span-2 lg:justify-center">
+            <Button asChild size="lg" className="w-full sm:w-auto"><a href="#richiedi-attivazione">Richiedi attivazione <ArrowRight /></a></Button>
+          </div>
         </div>
       </section>
 
