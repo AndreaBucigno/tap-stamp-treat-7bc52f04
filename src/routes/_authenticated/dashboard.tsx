@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
-import { ScanLine, Copy, Printer, Users, Gift, Award, QrCode, ArrowUpRight, Sparkles } from "lucide-react";
+import { ScanLine, Copy, Printer, Users, UserPlus, Trash2, Gift, Award, QrCode, ArrowUpRight, Sparkles } from "lucide-react";
 import { CustomerSearch } from "@/components/CustomerSearch";
 import { CardAppearanceEditor } from "@/components/CardAppearanceEditor";
 import { toast } from "sonner";
@@ -149,6 +149,7 @@ function VenueView({ venue }: { venue: Venue }) {
     card: { title: "Carta fedeltà", description: "Personalizza l'aspetto della carta e condividila con il QR code." },
     rewards: { title: "Premi", description: "Monitora i premi consegnati e quelli ancora da ritirare." },
     analytics: { title: "Statistiche", description: "Scopri come cresce la tua raccolta fedeltà." },
+    staff: { title: "Collaboratori", description: "Gestisci chi può aiutarti a timbrare le carte del tuo locale." },
   };
   const page = titles[section] ?? titles.overview;
 
@@ -183,7 +184,124 @@ function VenueView({ venue }: { venue: Venue }) {
         <div className="rounded-2xl border bg-muted/40 p-5 sm:col-span-2"><p className="text-sm text-muted-foreground">Per vedere quali premi vengono consegnati più spesso e l'andamento nel tempo, consulta le statistiche avanzate.</p><a href="/dashboard#analytics" className="mt-3 inline-flex items-center text-sm font-semibold text-primary">Vai alle statistiche <ArrowUpRight className="ml-1 size-4" /></a></div>
       </div>}
 
+      {section === "staff" && <StaffManagement venue={venue} />}
+
       {section === "analytics" && <AdvancedAnalytics venue={venue} />}
+    </div>
+  );
+}
+
+
+function StaffManagement({ venue }: { venue: Venue }) {
+  const queryClient = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const staffQ = useQuery({
+    queryKey: ["venue-staff", venue.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("venue_staff")
+        .select("id, email, created_at")
+        .eq("venue_id", venue.id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  async function addStaff(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.rpc("add_staff", { _email: normalizedEmail });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setEmail("");
+      await queryClient.invalidateQueries({ queryKey: ["venue-staff", venue.id] });
+      toast.success("Collaboratore aggiunto al locale.");
+    } catch {
+      toast.error("Connessione non disponibile. Riprova.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeStaff(id: string, staffEmail: string) {
+    if (!window.confirm(`Vuoi rimuovere ${staffEmail} dai collaboratori del locale?`)) return;
+    setRemovingId(id);
+    try {
+      const { error } = await supabase.rpc("remove_staff", { _id: id });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      await queryClient.invalidateQueries({ queryKey: ["venue-staff", venue.id] });
+      toast.success("Collaboratore rimosso.");
+    } catch {
+      toast.error("Connessione non disponibile. Riprova.");
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
+  return (
+    <div className="grid items-start gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+      <section className="rounded-2xl border bg-card p-5 sm:p-6">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><UserPlus className="size-5" /></span>
+          <div><h2 className="font-semibold">Aggiungi un collaboratore</h2><p className="text-sm text-muted-foreground">Autorizza un account a gestire le carte.</p></div>
+        </div>
+        <form className="mt-5 space-y-3" onSubmit={addStaff}>
+          <label htmlFor="staff-email" className="block text-sm font-medium">Email dell'account Timbrino</label>
+          <Input id="staff-email" type="email" inputMode="email" autoComplete="email" maxLength={254} required placeholder="nome@esempio.it" value={email} onChange={(event) => setEmail(event.target.value)} />
+          <Button type="submit" disabled={busy || !email.trim()} className="w-full"><UserPlus className="mr-2 size-4" />{busy ? "Aggiunta in corso…" : "Aggiungi collaboratore"}</Button>
+        </form>
+        <p className="mt-4 rounded-xl bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
+          Il collaboratore deve prima creare un account Timbrino con questa email. L'aggiunta abilita subito l'accesso al locale; non viene inviata un'email automatica.
+        </p>
+      </section>
+
+      <section className="rounded-2xl border bg-card p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <div><h2 className="font-semibold">Collaboratori del locale</h2><p className="mt-1 text-sm text-muted-foreground">Persone autorizzate a scansionare le carte.</p></div>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">{staffQ.data?.length ?? 0}</span>
+        </div>
+        {staffQ.isPending ? (
+          <p className="mt-5 rounded-xl bg-muted/40 p-5 text-center text-sm text-muted-foreground">Caricamento collaboratori…</p>
+        ) : staffQ.isError ? (
+          <div className="mt-5 rounded-xl bg-muted/40 p-5 text-center">
+            <p className="text-sm">Non è stato possibile caricare i collaboratori.</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => void staffQ.refetch()}>Riprova</Button>
+          </div>
+        ) : staffQ.data.length === 0 ? (
+          <div className="mt-5 rounded-xl border border-dashed p-6 text-center">
+            <Users className="mx-auto size-7 text-muted-foreground" />
+            <p className="mt-3 text-sm font-medium">Ancora nessun collaboratore</p>
+            <p className="mt-1 text-xs text-muted-foreground">Aggiungi il primo account per consentire anche ai dipendenti di registrare i timbri.</p>
+          </div>
+        ) : (
+          <ul className="mt-5 divide-y">
+            {staffQ.data.map((staff) => (
+              <li key={staff.id} className="flex min-w-0 items-center gap-3 py-3 first:pt-0 last:pb-0">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"><Users className="size-4" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{staff.email}</p>
+                  <p className="text-xs text-muted-foreground">Aggiunto il {new Date(staff.created_at).toLocaleDateString("it-IT")}</p>
+                </div>
+                <Button type="button" variant="ghost" size="icon" aria-label={`Rimuovi ${staff.email}`} title="Rimuovi collaboratore" disabled={removingId === staff.id} onClick={() => void removeStaff(staff.id, staff.email)}>
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
