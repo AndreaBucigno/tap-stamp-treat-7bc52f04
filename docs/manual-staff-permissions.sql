@@ -6,7 +6,8 @@
 -- 1. Run only after taking a database backup / confirming the target project.
 -- 2. Run the entire script in one execution. The transaction rolls back on error.
 -- 3. This script does not modify Drizzle migrations or generated Supabase types.
--- 4. After success, regenerate types using the project's supported workflow.
+-- 4. Do NOT run until the admin UI no longer calls admin_add_staff; that UI change must be deployed in the same release.
+-- 5. After success, regenerate types using the project's supported workflow.
 --
 -- Behavior:
 -- - New/existing venues default to disabled with a maximum of 5.
